@@ -5,7 +5,7 @@
  * Design system: "Batas" (see frontend.md). An aeronautical chart and a pilot's handbook, printed
  * in daylight. The metaphor is not decoration: aeronautical charts are a mature visual language for
  * *bounded operation under hard limits*, and Ambit is literally about scoped, expiring authority.
- * Magenta is the limit that must not be crossed. Blue is controlled structure. The airspeed
+ * Deep teal is the limit that must not be crossed. Blue is controlled structure. The airspeed
  * indicator's three arcs carry state. Nothing moves unless the visitor moves it.
  */
 
@@ -23,9 +23,18 @@
   --grid:   #e3e9e5;
   --edge:   #a9b5ae;
 
-  /* the limit, and the way forward */
-  --boundary:      #a0146c;
-  --boundary-soft: #f6e3ee;
+  /* the limit, and the way forward.
+
+     Two values, one meaning. A single colour cannot do both jobs: `--boundary` is dark enough to
+     carry white text as a mass, which is exactly what makes it read as black when it is only a
+     word or a 2px line. `--boundary-ink` is the same hue lifted until it sits at the ground
+     contrast the old magenta held (6.88:1 against 6.86:1, and 2.36:1 against body ink in both
+     cases), so the page's visual hierarchy is unchanged and only the hue moved.
+
+     Fill uses `--boundary`. A line or a word uses `--boundary-ink`. */
+  --boundary:      #0e2b33;
+  --boundary-ink:  #1c5c6e;
+  --boundary-soft: #e7f0f3;
 
   /* controlled structure */
   --structure: #1b4d99;
@@ -62,7 +71,7 @@
  * The Daylight Rule. One scheme, and it is light. There is deliberately no prefers-color-scheme
  * block anywhere in this codebase. Measured WCAG contrast against ground/paper/sunk:
  *   ink 16.20/17.14/15.02   ink-2 9.63/10.19/8.93   dim 5.66/5.99/5.25
- *   boundary 6.86/7.26/6.37 structure 7.52/7.95/6.97
+ *   boundary 13.67/14.46/12.67   boundary-ink 6.88/7.28/6.38   structure 7.52/7.95/6.97
  *   inside 5.30/5.60/4.91   caution 5.22/5.52/4.84   never 5.75/6.08/5.33
  * Lowest is 4.84, which clears the 4.5:1 floor. Any new colour is measured before it is added.
  */
@@ -201,11 +210,22 @@ button, .button {
   cursor: pointer;
   transition: background-color .13s ease-out, border-color .13s ease-out, transform .08s ease-out;
 }
-button:hover:not(:disabled) { background: color-mix(in oklab, var(--boundary) 86%, var(--ink)); }
-button:active:not(:disabled) { transform: translateY(1px); }
+/* Lifts toward the accent rather than darkening toward ink. The old magenta had room to go
+   darker on hover; this one is already close to ink, so darkening it is invisible. */
+/*
+ * Every state below names `.button` as well as `button`.
+ *
+ * The base rule has always been `button, .button`, but the states were element-only — so an
+ * `<a class="button ghost">` picked up the primary fill and never the ghost treatment. The hero's
+ * secondary call to action rendered as a second solid teal button beside the first one, and no
+ * anchor button had any hover feedback at all. `:disabled` stays element-only because an anchor
+ * cannot be disabled.
+ */
+button:hover:not(:disabled), .button:hover { background: color-mix(in oklab, var(--boundary) 72%, var(--boundary-ink)); }
+button:active:not(:disabled), .button:active { transform: translateY(1px); }
 button:disabled { opacity: .5; cursor: progress; }
-button.ghost { background: transparent; color: var(--ink); border-color: var(--edge); box-shadow: none; }
-button.ghost:hover:not(:disabled) { background: var(--paper); border-color: var(--ink); }
+button.ghost, .button.ghost { background: transparent; color: var(--ink); border-color: var(--edge); box-shadow: none; }
+button.ghost:hover:not(:disabled), .button.ghost:hover { background: var(--paper); border-color: var(--ink); }
 
 input, textarea, select {
   font-family: var(--mono);
@@ -215,7 +235,7 @@ input, textarea, select {
   border-radius: 3px;
   padding: .55rem .6rem;
   color: var(--ink);
-  caret-color: var(--boundary);
+  caret-color: var(--boundary-ink);
   width: 100%;
 }
 input:hover, textarea:hover, select:hover { border-color: var(--dim); }
@@ -262,7 +282,7 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
 .tag.structure { color: var(--structure); }
 .tag.structure::before { background: currentColor; }
 
-.tag.boundary { color: var(--boundary); }
+.tag.boundary { color: var(--boundary-ink); }
 .tag.boundary::before { background: currentColor; border-radius: 1px; }
 
 /* ---------------------------------------------------------------- hatching */
@@ -279,7 +299,7 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
 .hatched-boundary {
   background: repeating-linear-gradient(135deg,
     var(--sunk) 0 6px,
-    color-mix(in oklab, var(--boundary) 18%, var(--sunk)) 6px 8px);
+    color-mix(in oklab, var(--boundary-ink) 18%, var(--sunk)) 6px 8px);
 }
 
 /* ---------------------------------------------------------------- pending */
@@ -312,8 +332,16 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
 .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .7rem; }
 .wordmark { display: flex; align-items: center; gap: .55rem; font-size: 1.45rem; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
 .nav { display: flex; gap: 1.1rem; align-items: center; }
-.nav a { color: var(--ink-2); font-size: .88rem; text-decoration: none; }
-.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-decoration-color: var(--boundary); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+/*
+ * Scoped away from `.button`, which shares this container.
+ *
+ * `.nav a` is (0,1,1) and `.button` is (0,1,0), so without the :not() the nav wins the cascade and
+ * paints the primary CTA in `ink-2` — 1.87:1 against its own background. It was wrong under the old
+ * magenta too and merely survivable; against the deep teal it is unreadable. The hover rule leaked
+ * the same way and put an underline through the button.
+ */
+.nav a:not(.button) { color: var(--ink-2); font-size: .88rem; text-decoration: none; }
+.nav a:not(.button):hover, .nav a:not(.button)[aria-current="page"] { color: var(--ink); text-decoration: underline; text-decoration-color: var(--boundary-ink); text-decoration-thickness: 2px; text-underline-offset: 4px; }
 @media (max-width: 46rem) { .nav a:not(.keep) { display: none; } }
 
 .footer { border-top: 2px solid var(--ink); background: var(--paper); padding-block: 2.5rem; }
@@ -358,12 +386,12 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
 }
 .rail-item:hover { background: var(--sunk); color: var(--ink); }
 
-/* Current page gets the boundary magenta — it is the one thing the rail asserts. */
+/* Current page gets the boundary teal — it is the one thing the rail asserts. */
 .rail-item[aria-current="page"] {
   background: var(--sunk);
   color: var(--ink);
   font-weight: 700;
-  box-shadow: inset 2px 0 0 var(--boundary);
+  box-shadow: inset 2px 0 0 var(--boundary-ink);
 }
 
 /* Phase 2: visible, labelled, not clickable. Hatched rather than merely faded, so "not built"
@@ -565,4 +593,184 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
   .docs-index {
     position: static; max-height: none; border-bottom: 1px solid var(--rule); padding-bottom: 1rem;
   }
+}
+
+/* ---------------------------------------------------------------- responsive rows */
+
+/*
+ * Grid rows that were previously inline `style` props and therefore could not carry a media query.
+ * Each collapses at the width where its narrowest column stops fitting, rather than at a single
+ * global breakpoint — a three-column row with a 15rem field breaks long before a two-column one.
+ *
+ * Target: every page holds at 390px with no horizontal scroll.
+ */
+
+/* A rule in the fifteen-rule list: ordinal, description, outcome mark. */
+.rule-row {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr auto;
+  gap: .75rem;
+  align-items: start;
+}
+@media (max-width: 40rem) {
+  .rule-row { grid-template-columns: 2.2rem 1fr; }
+  /* The mark drops under the description rather than squeezing it to a few characters. */
+  .rule-row > :last-child { grid-column: 2; align-items: flex-start !important; margin-top: .3rem; }
+}
+
+/* A limitations placard row: label, then figure and explanation. */
+.placard-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: .75rem;
+  padding: .7rem 0;
+  border-top: 1px solid var(--rule);
+}
+@media (max-width: 40rem) {
+  .placard-row { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+}
+
+/* A policy editor row: ordinal, rule, its input. The input needs real width to be usable. */
+.policy-row {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr 15rem;
+  gap: 1rem;
+  align-items: start;
+  padding: .85rem .2rem;
+  border-top: 1px solid var(--rule);
+}
+@media (max-width: 60rem) {
+  /* The field moves beneath the rule it belongs to, still indented under the ordinal. */
+  .policy-row { grid-template-columns: 2.2rem minmax(0, 1fr); }
+  .policy-row > :last-child { grid-column: 2; margin-top: .6rem; }
+}
+
+/* A step in the five-line mechanism: number, name, description. */
+.loop-row {
+  display: grid;
+  grid-template-columns: 3rem 11rem 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--rule);
+  align-items: baseline;
+}
+@media (max-width: 46rem) {
+  .loop-row { grid-template-columns: 3rem minmax(0, 1fr); }
+  .loop-row > :last-child { grid-column: 2; margin-top: .3rem; }
+}
+
+/* A refusal count: code, measured bar, count. */
+.report-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem 3rem;
+  gap: 1rem;
+  align-items: center;
+}
+@media (max-width: 46rem) {
+  /* The bar is decoration for a number that is still shown; it goes rather than shrinking to a stub. */
+  .report-row { grid-template-columns: 1fr 3rem; }
+  .report-row > .report-bar { display: none; }
+}
+
+/* ---------------------------------------------------------------- overflow guards */
+
+/*
+ * Addresses, hashes and digests are long unbroken strings. Left alone they force a horizontal
+ * scrollbar on the whole page at phone width — the one thing the design system says must not happen.
+ */
+.bytes, code, .facts dd, .docs-body td { overflow-wrap: anywhere; }
+
+/*
+ * Nothing may push the document sideways.
+ *
+ * `overflow-x: clip`, **not** `hidden`. `hidden` makes the element a scroll container, and a scroll
+ * container between a sticky element and the viewport silently cancels the stickiness — it does not
+ * warn, the element simply scrolls away. Setting it here once broke both the docs index and the
+ * console auth bar at the same time.
+ *
+ * `clip` trims the overflow without creating that container, so sticky keeps working. Where it is
+ * unsupported the page simply allows the sideways scroll it would have had, which is the better
+ * failure of the two.
+ */
+html, body { max-width: 100%; overflow-x: clip; }
+
+@media (max-width: 46rem) {
+  /* The wordmark and CTA must share one line without wrapping into two rows of chrome. */
+  .topbar-inner { gap: .5rem; }
+  .wordmark { font-size: 1.2rem; }
+  .nav .button { padding: .55rem .7rem; font-size: .8rem; }
+
+  /* Console content gets its gutter back; clamp() bottoms out too tight at this width. */
+  .console-main { padding-inline: 1rem; }
+
+  /* Stat tiles go two-up rather than one, so a four-tile row reads as a block not a list. */
+  .tiles { grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .9rem; }
+}
+
+@media (max-width: 26rem) {
+  /* 390px and below: single column tiles, and the display type stops dominating the viewport. */
+  .tiles { grid-template-columns: minmax(0, 1fr); }
+  .display { font-size: 2.1rem; }
+}
+
+@media (max-width: 46rem) {
+  /*
+   * Fixed column widths are set inline per table to keep a label column from collapsing on a wide
+   * screen. At phone width they are the reason a two-column table needs sideways scrolling, so they
+   * are released. `!important` is required only because the values are inline `style` attributes.
+   */
+  th[style], td[style] { width: auto !important; }
+
+  /* Give a table room to breathe before the wrapper has to scroll. */
+  th, td { padding-right: .5rem; font-size: .9em; }
+}
+
+@media (max-width: 60rem) {
+  /*
+   * The hero chart is decoration. Below this width the headline needs the space more than the
+   * sectional drawing does, and a 44rem canvas pushed off-screen right is wasted paint.
+   */
+  .hero-chart { width: 30rem !important; height: 30rem !important; right: -10rem !important; opacity: .55; }
+}
+
+@media (max-width: 40rem) {
+  .hero-chart { display: none; }
+}
+
+/* ---------------------------------------------------------------- console home */
+
+/*
+ * The way out of the console.
+ *
+ * Shell B has no site header, so the auth bar is the only persistent chrome on ten pages. Without a
+ * wordmark here there is no route back to the public site at all — the rail's "Public explorer" link
+ * leaves the console but not the product, and a reader who arrived at /console has no way home.
+ *
+ * Sized down from the marketing wordmark: this bar is dense and the mark is a wayfinder here, not a
+ * brand statement.
+ */
+.console-home {
+  font-size: 1.05rem;
+  letter-spacing: .06em;
+  gap: .45rem;
+  flex: none;
+  border-radius: 3px;
+  padding: .15rem .25rem;
+  margin-left: -.25rem;
+}
+.console-home:hover { background: var(--sunk); }
+
+/* A hairline, not a bullet: the same vocabulary the rest of the system uses to separate groups. */
+.auth-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.1rem;
+  background: var(--rule);
+  flex: none;
+}
+
+@media (max-width: 46rem) {
+  /* The mark alone still reads as "home"; the word is what there is no room for. */
+  .console-home-label { display: none; }
+  .auth-divider { display: none; }
 }

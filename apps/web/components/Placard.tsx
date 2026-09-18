@@ -51,13 +51,7 @@ export function Placard({
         {rows.map((row) => (
           <div
             key={row.label}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "7.5rem 1fr",
-              gap: ".75rem",
-              padding: ".7rem 0",
-              borderTop: "1px solid var(--rule)",
-            }}
+            className="placard-row"
           >
             <dt
               className="label"

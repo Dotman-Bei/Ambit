@@ -32,13 +32,10 @@ export function RuleList({ rules, firstFailOrdinal }: { rules: RuleRow[]; firstF
         return (
           <li
             key={rule.id}
+            className="rule-row"
             style={{
               borderTop: "1px solid var(--rule)",
               padding: ".55rem .4rem",
-              display: "grid",
-              gridTemplateColumns: "2.2rem 1fr auto",
-              gap: ".75rem",
-              alignItems: "start",
               ...(isCause ? { background: "var(--sunk)" } : {}),
             }}
           >

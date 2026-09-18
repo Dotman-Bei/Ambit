@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Mark } from "../../../components/Mark";
 import { Mono } from "../../../components/console/ui";
 
 /**
@@ -66,7 +65,6 @@ export default function Approve({ params }: { params: Promise<{ approvalId: stri
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "2rem 1.25rem" }}>
       <div style={{ width: "100%", maxWidth: "34rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: ".55rem", marginBottom: "1.5rem" }}>
-          <Mark size={26} />
           <span className="wordmark" style={{ fontSize: "1.2rem" }}>Ambit</span>
         </div>
         {children}
@@ -157,7 +155,7 @@ export default function Approve({ params }: { params: Promise<{ approvalId: stri
         </dl>
 
         <p style={{ marginTop: "1.2rem", fontWeight: 700 }}>
-          Approving authorises <span style={{ color: "var(--boundary)" }}>this digest only</span>.
+          Approving authorises <span style={{ color: "var(--boundary-ink)" }}>this digest only</span>.
         </p>
         <p className="note" style={{ marginTop: ".35rem" }}>
           Any change to the amount, the recipient, the item or the expiry produces a different digest,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SectionTitle, Mono } from "../../../components/console/ui";
-import { get, put, post, owner, type PolicyShape, type RuleCatalogueEntry } from "../../../components/console/api";
+import { get, put, post, owner, type Health, type PolicyShape, type RuleCatalogueEntry } from "../../../components/console/api";
 import { ASSET, NETWORK } from "../../../components/console/network";
 
 /**
@@ -16,6 +16,13 @@ import { ASSET, NETWORK } from "../../../components/console/network";
  * passing."* An input that accepted a value for a rule that decides nothing would be a lie told in
  * the shape of a form field.
  */
+
+/**
+ * A status line says what happened and labels itself. The label used to be derived from the tone
+ * (`inside` → "written", anything else → "refused"), which meant a third outcome could not be
+ * expressed: a pause is neither a write nor a refusal, it is a limit now in force.
+ */
+type Message = { tone: "inside" | "caution" | "never"; label: string; text: string };
 
 type Draft = {
   perCallCap: string;
@@ -70,15 +77,20 @@ export default function PolicyPage() {
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
   const [hash, setHash] = useState<string | null>(null);
   const [saved, setSaved] = useState<PolicyShape | null>(null);
-  const [message, setMessage] = useState<{ tone: "inside" | "never"; text: string } | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
+  const [pauses, setPauses] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [r, p] = await Promise.all([
+    const [r, p, h] = await Promise.all([
       get<{ rules: RuleCatalogueEntry[] }>("/rules"),
       get<{ policies: PolicyShape[] }>("/policy"),
+      get<Health>("/health"),
     ]);
     if (r.state === "ok") setCatalogue(r.data.rules);
+    // The pause set is read from the service rather than tracked locally, so a pause applied from
+    // another tab, or left over from an earlier session, is visible here instead of invisible.
+    if (h.state === "ok") setPauses(h.data.pauses);
     if (p.state === "ok" && p.data.policies[0]) {
       const existing = p.data.policies[0];
       setSaved(existing);
@@ -136,20 +148,67 @@ export default function PolicyPage() {
     setBusy(false);
     if (result.state === "ok") {
       setHash(result.data.policyHash);
-      setMessage({ tone: "inside", text: "Policy written. Every decision from here is judged against this hash." });
+      setMessage({ tone: "inside", label: "written", text: "Policy written. Every decision from here is judged against this hash." });
       void load();
     } else if (result.state === "error") {
       // §9: a validation error names the field. It does not say "invalid input".
-      setMessage({ tone: "never", text: `${result.code} — ${result.detail}` });
+      setMessage({ tone: "never", label: "refused", text: `${result.code} — ${result.detail}` });
     } else {
-      setMessage({ tone: "never", text: "The authority service could not be reached." });
+      setMessage({ tone: "never", label: "refused", text: "The authority service could not be reached." });
     }
   };
 
-  const pause = async (scope: string) => {
-    await post("/admin/pause", { scope });
-    setMessage({ tone: "never", text: `Paused "${scope}". This takes effect immediately, without a deploy.` });
+  /**
+   * §20 The database pause, and its undo.
+   *
+   * An earlier version of this handler discarded the response and reported success unconditionally,
+   * under the `never` tone. Both halves were wrong, in opposite directions. A pause that *held*
+   * rendered a REFUSED chip, which reads as the control having been rejected — and a pause that
+   * never reached the service rendered exactly the same words, which reads as a control being in
+   * force when nothing had been written. An emergency stop that misreports its own state is worse
+   * than one that is merely ugly: the operator's next decision is made on what this line says.
+   *
+   * So the response is now read, the pause set comes back from the service rather than being
+   * assumed, and an unreachable service is reported as *unknown* rather than as either outcome.
+   */
+  const applyScope = async (route: "pause" | "resume", scope: string) => {
+    setBusy(true);
+    const result = await post<{ paused: string[] }>(`/admin/${route}`, { scope });
+    setBusy(false);
+
+    if (result.state === "ok") {
+      setPauses(result.data.paused);
+      setMessage(
+        route === "pause"
+          ? {
+              tone: "caution",
+              label: "paused",
+              text: `Paused "${scope}". Every spend matching that scope now refuses with EXECUTION_PAUSED, immediately and without a deploy.`,
+            }
+          : {
+              tone: "inside",
+              label: "resumed",
+              text: `Resumed "${scope}". Spending matching that scope is judged by the rules again.`,
+            },
+      );
+      return;
+    }
+
+    // Distinguished deliberately: a named refusal means the service answered and wrote nothing. An
+    // unreachable service means the request may or may not have landed, and saying otherwise would
+    // be a guess about the state of an emergency control.
+    setMessage({
+      tone: "never",
+      label: route === "pause" ? "not paused" : "not resumed",
+      text:
+        result.state === "error"
+          ? `The service refused the ${route}: ${result.code}${result.detail ? ` — ${result.detail}` : ""}. Nothing changed.`
+          : `The authority service could not be reached, so whether the ${route} was applied is unknown. The list below is from the last successful read.`,
+    });
   };
+
+  const pause = (scope: string) => applyScope("pause", scope);
+  const resume = (scope: string) => applyScope("resume", scope);
 
   return (
     <>
@@ -161,7 +220,7 @@ export default function PolicyPage() {
 
       {message ? (
         <div className="well" style={{ marginBottom: "1.5rem" }}>
-          <span className={`tag ${message.tone}`}>{message.tone === "inside" ? "written" : "refused"}</span>
+          <span className={`tag ${message.tone}`}>{message.label}</span>
           <p className="note" style={{ marginTop: ".5rem" }}>{message.text}</p>
         </div>
       ) : null}
@@ -177,14 +236,7 @@ export default function PolicyPage() {
           return (
             <li
               key={rule.id}
-              style={{
-                borderTop: "1px solid var(--rule)",
-                padding: ".85rem .2rem",
-                display: "grid",
-                gridTemplateColumns: "2.2rem 1fr 15rem",
-                gap: "1rem",
-                alignItems: "start",
-              }}
+              className="policy-row"
             >
               <span className="bytes dim" style={{ paddingTop: ".3rem" }}>
                 {String(rule.ordinal).padStart(2, "0")}
@@ -241,9 +293,39 @@ export default function PolicyPage() {
             be bypassed by a narrower rule.
           </p>
           <div style={{ display: "flex", gap: ".6rem", marginTop: ".8rem", flexWrap: "wrap" }}>
-            <button className="ghost" onClick={() => pause("spending")}>Pause all spending</button>
-            <button className="ghost" onClick={() => pause("provider:ambit-seller")}>Pause this provider</button>
+            <button className="ghost" disabled={busy || pauses.includes("spending")} onClick={() => pause("spending")}>
+              {pauses.includes("spending") ? "All spending is paused" : "Pause all spending"}
+            </button>
+            <button
+              className="ghost"
+              disabled={busy || pauses.includes("provider:ambit-seller")}
+              onClick={() => pause("provider:ambit-seller")}
+            >
+              {pauses.includes("provider:ambit-seller") ? "This provider is paused" : "Pause this provider"}
+            </button>
           </div>
+
+          {/*
+            The undo lives here as well as on Settings. A stop control whose release is on another
+            page is a stop control an operator will leave on by accident — and a pause left on looks
+            exactly like a product that does not work.
+          */}
+          {pauses.length > 0 ? (
+            <div className="panel" style={{ marginTop: "1.2rem", borderColor: "var(--never)" }}>
+              <span className="placard-label">In force now</span>
+              <p className="note" style={{ marginTop: ".5rem", maxWidth: "52ch" }}>
+                Spending in these scopes is refused with <Mono>EXECUTION_PAUSED</Mono> before any
+                rule is read. Nothing here expires on its own.
+              </p>
+              <div style={{ display: "flex", gap: ".6rem", marginTop: ".8rem", flexWrap: "wrap" }}>
+                {pauses.map((scope) => (
+                  <button key={scope} className="ghost" disabled={busy} onClick={() => resume(scope)}>
+                    Resume {scope}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
     </>

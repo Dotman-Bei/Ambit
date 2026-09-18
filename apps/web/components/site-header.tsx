@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Mark } from "./Mark";
 
 /**
  * The marketing nav. Five links plus one CTA.
@@ -26,7 +25,6 @@ export function SiteHeader() {
     <header className="topbar">
       <div className="container topbar-inner">
         <a className="wordmark" href="/">
-          <Mark size={26} />
           Ambit
         </a>
         <nav className="nav" aria-label="Main">

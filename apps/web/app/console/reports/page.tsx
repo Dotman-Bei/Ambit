@@ -128,7 +128,7 @@ export default function ReportsPage() {
           <ul style={{ listStyle: "none", margin: "1.2rem 0 0", padding: 0 }}>
             {stats.byCode.map(([code, count]) => (
               <li key={code} style={{ borderTop: "1px solid var(--rule)", padding: ".7rem 0" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 11rem 3rem", gap: "1rem", alignItems: "center" }}>
+                <div className="report-row">
                   <div style={{ minWidth: 0 }}>
                     <code style={{ color: "var(--never)", fontWeight: 700 }}>{code}</code>
                     <span className="note" style={{ display: "block" }}>
@@ -140,7 +140,7 @@ export default function ReportsPage() {
                     number that was never measured on its way to the one that was.
                   */}
                   <div
-                    className="hatched-never"
+                    className="hatched-never report-bar"
                     style={{
                       height: "1.1rem",
                       border: "1px solid var(--edge)",

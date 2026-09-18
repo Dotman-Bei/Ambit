@@ -18,7 +18,7 @@ import { NETWORK_LABEL } from "../../components/console/network";
  */
 
 export const metadata = {
-  title: "Ambit docs — the authority layer for agent spending",
+  title: "Docs",
   description: "How Ambit decides whether an agent may spend, before any money moves.",
 };
 

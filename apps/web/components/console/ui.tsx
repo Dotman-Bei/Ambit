@@ -56,7 +56,7 @@ export function StatTile({
   emphasis?: "never" | "boundary" | "neutral";
 }) {
   const colour =
-    emphasis === "never" ? "var(--never)" : emphasis === "boundary" ? "var(--boundary)" : "var(--ink)";
+    emphasis === "never" ? "var(--never)" : emphasis === "boundary" ? "var(--boundary-ink)" : "var(--ink)";
   return (
     <div style={{ borderTop: "1px solid var(--rule)", paddingTop: ".7rem" }}>
       <span className="label" style={{ color: "var(--dim)", textTransform: "uppercase", letterSpacing: ".04em" }}>

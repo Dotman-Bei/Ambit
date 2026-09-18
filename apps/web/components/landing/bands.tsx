@@ -36,17 +36,21 @@ export function HeroBand() {
           opacity: 0.55,
         }}
       />
-      <div aria-hidden="true" style={{ position: "absolute", top: "-6rem", right: "-14rem", width: "44rem", height: "44rem" }}>
+      <div
+        aria-hidden="true"
+        className="hero-chart"
+        style={{ position: "absolute", top: "-6rem", right: "-14rem", width: "44rem", height: "44rem" }}
+      >
         <HeroChart />
       </div>
 
       <div className="container" style={{ position: "relative", paddingBlock: "var(--band)" }}>
         <div style={{ maxWidth: "34rem" }}>
-          <span className="tag boundary">The authority layer</span>
+          <span className="tag boundary">Signing authority</span>
           <h1 className="display" style={{ marginTop: "1.25rem" }}>
             The model can propose anything.
             <br />
-            <span style={{ color: "var(--boundary)" }}>It cannot widen the ambit.</span>
+            <span style={{ color: "var(--boundary-ink)" }}>It cannot widen the ambit.</span>
           </h1>
           <p className="lead" style={{ marginTop: "1.5rem" }}>
             Ambit decides whether an agent may spend, before the money moves, using a deterministic
@@ -172,14 +176,7 @@ export function LoopBand() {
         {STEPS.map((s) => (
           <li
             key={s.n}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "3rem 11rem 1fr",
-              gap: "1rem",
-              padding: "1rem 0",
-              borderTop: "1px solid var(--rule)",
-              alignItems: "baseline",
-            }}
+            className="loop-row"
           >
             <span className="bytes dim">{s.n}</span>
             <strong>{s.t}</strong>

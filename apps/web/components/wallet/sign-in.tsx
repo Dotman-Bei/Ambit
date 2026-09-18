@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLogout, useSendEmailOTP, useUser, useVerifyOTP } from "@dynamic-labs-sdk/react-hooks";
 import { isConfigured } from "./dynamic-client";
+import { clearUserId } from "../console/api";
 
 /**
  * Email sign-in, through the hooks of the same SDK generation that performs delegation.
@@ -53,6 +54,10 @@ export function SignIn({ onSignedIn, signedIn }: { onSignedIn: () => void; signe
           onClick={async () => {
             try {
               await logout.mutateAsync(undefined as never);
+              clearUserId();
+              setSent(null);
+              setCode("");
+              setEmail("");
               onSignedIn();
             } catch (cause) {
               report("logout", cause);

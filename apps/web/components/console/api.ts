@@ -61,6 +61,21 @@ export function setUserId(value: string): void {
   }
 }
 
+/**
+ * Forget the signed-in user.
+ *
+ * Without this, signing out leaves the previous id in storage and every later request asks the
+ * authority service about someone who is no longer here — which reads as a delegation that will not
+ * load rather than as a stale session.
+ */
+export function clearUserId(): void {
+  try {
+    localStorage.removeItem("ambit.userId");
+  } catch {
+    /* nothing to clear */
+  }
+}
+
 export function headers(): Record<string, string> {
   return {
     "content-type": "application/json",

@@ -3,23 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { SectionTitle, Mono } from "../../../components/console/ui";
 import { Empty } from "../../../components/console/empty";
-import { NotInBuild } from "../../../components/console/not-in-build";
 import { get, type DecisionRow, type Health } from "../../../components/console/api";
 
 /**
  * B9 `/console/vendors`.
  *
- * Two things live here and they must not be confused:
+ * The provider registry, which is real and load-bearing: §18's SSRF control. These are the only
+ * base URLs the authority service will fetch, and a `SpendIntent` names a provider and a capability
+ * rather than a URL, so there is nowhere to put an arbitrary one.
  *
- *  - **The provider registry**, which is real and load-bearing. §18's SSRF control: these are the
- *    only base URLs the authority service will fetch, and a `SpendIntent` names a provider and a
- *    capability rather than a URL, so there is nowhere to put an arbitrary one.
- *  - **Vendor scoring**, which is rule 8 `vendor.lcbFloor` — present in the engine, returning
- *    `RULE_NOT_ENFORCED`, deciding nothing. It is phase 3.
- *
- * The page shows the first as fact and the second as an explicit gap. Rendering a score here, even
- * a placeholder one, would imply a control that does not exist — the same reason rule 8 has no
- * input in the policy editor.
+ * The counts shown per provider are *usage*, read from the decision stream. They are not a rating,
+ * and nothing in the engine reads them.
  */
 
 export default function VendorsPage() {
@@ -126,20 +120,6 @@ export default function VendorsPage() {
         })
       )}
 
-      <section style={{ borderTop: "2px solid var(--ink)", paddingTop: "1rem", marginTop: "2.5rem" }}>
-        <h3>Vendor scoring</h3>
-        <div style={{ marginTop: "1rem" }}>
-          <NotInBuild
-            what="Rule 8 — vendor.lcbFloor — enforces nothing."
-            phase={3}
-            why="The rule is present in the engine and returns RULE_NOT_ENFORCED on every decision. No score is computed, no floor is applied, and no verdict is drawn from either value. A score shown here — even a placeholder — would imply a control that does not exist, which is the same reason the rule has no input in the policy editor."
-          />
-        </div>
-        <p className="note" style={{ marginTop: "1rem", maxWidth: "58ch" }}>
-          The counts above are <em>usage</em>, read from the decision stream. They are not a rating and
-          nothing in the engine reads them.
-        </p>
-      </section>
     </>
   );
 }

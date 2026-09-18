@@ -37,7 +37,18 @@ const mono = B612_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ambit — the authority layer for agent spending",
+  /**
+   * The tab reads "Ambit" and nothing else. A tab is about 18 characters wide before it truncates,
+   * so a positioning line put there is not read — it is cut mid-word next to a favicon. The template
+   * gives inner pages "Docs — Ambit" so the brand still travels, and the full line lives in the
+   * description and the share card, which are the places with room for it.
+   */
+  title: { default: "Ambit", template: "%s — Ambit" },
+  openGraph: {
+    title: "Ambit — delegated signing authority for autonomous agents",
+    description:
+      "Ambit decides whether an agent may spend, before the money moves, using a deterministic policy engine and a Dynamic wallet the user still owns and can revoke at any moment.",
+  },
   description:
     "Ambit decides whether an agent may spend, before the money moves, using a deterministic policy engine and a Dynamic wallet the user still owns and can revoke at any moment.",
 };

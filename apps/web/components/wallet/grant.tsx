@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDelegateWaasKeyShares } from "@dynamic-labs-sdk/react-hooks";
+import { CreateWallet } from "./create-wallet";
 
 /**
  * Grant delegation — `delegateWaasKeyShares({ walletAccount })`, via the hook so it runs on the
@@ -11,15 +12,40 @@ import { useDelegateWaasKeyShares } from "@dynamic-labs-sdk/react-hooks";
  * registered public key and POSTs them to the webhook. Resolving means **the user approved**, not
  * **Ambit can sign** — the page re-reads the authority service to learn the second thing.
  */
-export function GrantButton({ wallet, onGranted }: { wallet: unknown | null; onGranted: () => void }) {
+export function GrantButton({
+  wallet,
+  signedIn,
+  userId,
+  onGranted,
+}: {
+  wallet: unknown | null;
+  /** Signed in but without a wallet yet is a different state from not signed in at all. */
+  signedIn?: boolean;
+  /** Present once signed in. Used to ask for a wallet when the environment has not made one. */
+  userId?: string | null;
+  onGranted: () => void;
+}) {
   const delegate = useDelegateWaasKeyShares();
   const [error, setError] = useState<string | null>(null);
 
   if (wallet === null) {
     return (
       <div>
-        <button disabled title="Sign in first">Grant authority</button>
-        <p className="note" style={{ marginTop: ".4rem" }}>Sign in to create a wallet first.</p>
+        <button disabled title={signedIn ? "Creating your wallet…" : "Sign in first"}>
+          Grant authority
+        </button>
+        <div className="note" style={{ marginTop: ".4rem", maxWidth: "42ch" }}>
+          {signedIn && userId ? (
+            <>
+              <span style={{ display: "block" }}>
+                You are signed in but this account has no embedded wallet yet.
+              </span>
+              <CreateWallet userId={userId} onCreated={onGranted} />
+            </>
+          ) : (
+            "Sign in to create a wallet first."
+          )}
+        </div>
       </div>
     );
   }

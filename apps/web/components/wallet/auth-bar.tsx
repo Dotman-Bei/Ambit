@@ -46,6 +46,19 @@ export function AuthBar() {
 
   return (
     <div className="auth-bar">
+      {/*
+        The wordmark is the way out of the console.
+        Shell B has no site header — the auth bar is the top bar — so without this there is no link
+        back to the public site from any of the ten console pages. A logo in the top-left returning
+        home is the one navigation convention a first-time visitor does not have to be taught, which
+        is why it belongs here rather than as another entry in the rail.
+      */}
+      <a className="wordmark console-home" href="/" title="Ambit home">
+        <span className="console-home-label">Ambit</span>
+      </a>
+
+      <span className="auth-divider" aria-hidden="true" />
+
       <span className="label" style={{ color: "var(--dim)", textTransform: "uppercase", letterSpacing: ".04em" }}>
         {w.address ? "Wallet" : "Owner"}
       </span>

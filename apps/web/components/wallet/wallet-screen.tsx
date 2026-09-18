@@ -204,7 +204,12 @@ export function WalletScreen() {
           </div>
         ) : null}
         <div style={{ display: "flex", gap: "1.5rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
-          <GrantButton wallet={w.wallet} onGranted={() => { w.refresh(); void load(); }} />
+          <GrantButton
+            wallet={w.wallet}
+            signedIn={w.userId !== null}
+            userId={w.userId}
+            onGranted={() => { w.refresh(); void load(); }}
+          />
           <RevokeButton wallet={w.wallet} onRevoked={() => { w.refresh(); void load(); }} />
         </div>
 
