@@ -1,0 +1,448 @@
+/*
+ * The token module. One :root block, one base reset, one focus style — every page composes from
+ * this file and nothing else defines a colour.
+ *
+ * Design system: "Batas" (see frontend.md). An aeronautical chart and a pilot's handbook, printed
+ * in daylight. The metaphor is not decoration: aeronautical charts are a mature visual language for
+ * *bounded operation under hard limits*, and Ambit is literally about scoped, expiring authority.
+ * Magenta is the limit that must not be crossed. Blue is controlled structure. The airspeed
+ * indicator's three arcs carry state. Nothing moves unless the visitor moves it.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* neutral — the chart */
+  --ground: #f3f6f4;
+  --paper:  #fbfcfb;
+  --sunk:   #e9eeeb;
+  --ink:    #0f1a22;
+  --ink-2:  #33414d;
+  --dim:    #56636f;
+  --rule:   #d2dad5;
+  --grid:   #e3e9e5;
+  --edge:   #a9b5ae;
+
+  /* the limit, and the way forward */
+  --boundary:      #a0146c;
+  --boundary-soft: #f6e3ee;
+
+  /* controlled structure */
+  --structure: #1b4d99;
+
+  /* the airspeed arcs */
+  --inside:       #17753b;
+  --caution:      #8f5c00;
+  --caution-fill: #f0b429;
+  --never:        #c0141a;
+
+  --on-boundary: #ffffff;
+
+  /* geometry */
+  --gutter:    1.25rem;
+  --container: 76rem;
+  --band:      clamp(3.5rem, 8vw, 6.5rem);
+  --graticule: 48px;
+  --cell:      1rem;
+
+  --shadow: 0 1px 1px rgb(15 26 34 / .06), 0 12px 32px -18px rgb(15 26 34 / .28);
+  --seat:   0 1px 0 rgb(0 0 0 / .08);
+  --halo:   0 0 0 3px var(--boundary-soft);
+}
+
+/*
+ * The Daylight Rule. One scheme, and it is light. There is deliberately no prefers-color-scheme
+ * block anywhere in this codebase. Measured WCAG contrast against ground/paper/sunk:
+ *   ink 16.20/17.14/15.02   ink-2 9.63/10.19/8.93   dim 5.66/5.99/5.25
+ *   boundary 6.86/7.26/6.37 structure 7.52/7.95/6.97
+ *   inside 5.30/5.60/4.91   caution 5.22/5.52/4.84   never 5.75/6.08/5.33
+ * Lowest is 4.84, which clears the 4.5:1 floor. Any new colour is measured before it is added.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--edge) var(--ground);
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 0.9375rem/1.65 var(--text);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* One focus style, global, set before anything can forget it. Never suppressed, never restyled. */
+:focus-visible {
+  outline: 2px solid var(--boundary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection { background: var(--boundary); color: var(--on-boundary); }
+::placeholder { color: var(--dim); opacity: 1; }
+
+/* The Still Chart Rule. Nothing moves on its own — no fills, draws, loops or shimmer on load. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------- type */
+
+/*
+ * The Placard Voice Rule. Barlow Condensed is always 700 and uppercase, and only for display,
+ * headings, placard labels and the wordmark. It never sets running text or a figure in a sentence.
+ *
+ * The Readable Figure Rule. Every figure a reader actually reads is set in B612 with tabular lining
+ * numerals — the proportional face, not the mono. The mono sets a decimal point as wide as a digit,
+ * so "1.941" reads as "1. 941". Mono is for bytes, hashes, timestamps and ticks only.
+ */
+
+h1, h2, h3, .placard-label, .wordmark, .title {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+h1 { font-size: clamp(2rem, 4vw, 3.1rem); line-height: .95; letter-spacing: -.005em; }
+h2 { font-size: 1.6rem; line-height: 1; letter-spacing: .03em; }
+h3 { font-size: 1.05rem; line-height: 1; letter-spacing: .08em; }
+
+.display { font-family: var(--display); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(2.6rem, 5vw, 4.4rem); line-height: .92; letter-spacing: -.01em; margin: 0; }
+
+.placard-label { font-size: 1.05rem; line-height: 1; letter-spacing: .08em; }
+
+.lead { font-size: clamp(1rem, 1.3vw, 1.1rem); line-height: 1.65; color: var(--ink-2); margin: 0; }
+
+.bytes, code, pre, time, .tick {
+  font-family: var(--mono);
+  font-size: .82rem;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.label { font-weight: 700; font-size: .8rem; }
+.note { color: var(--ink-2); font-size: .84rem; }
+.dim  { color: var(--dim); }
+
+a { color: var(--structure); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+/* ---------------------------------------------------------------- layout */
+
+.container { max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+
+.band { padding-block: var(--band); border-top: 1px solid var(--rule); }
+.band.sunk { background: var(--sunk); }
+
+/* The Hairline Chart Rule. Structure is drawn with rules, not boxes. A new grouping gets a
+   hairline or a 2px ink rule across its top — never a coloured stripe down its side. */
+.group { border-top: 2px solid var(--ink); padding-top: 1rem; margin-top: 2rem; }
+
+.plate {
+  background: var(--paper);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+/* The plate lift is for a chart plate, never for a row of cards. Only three things get it. */
+.panel { background: var(--paper); border: 1px solid var(--edge); border-radius: 4px; padding: 1rem; }
+
+.well { background: var(--sunk); border: 1px solid var(--edge); border-radius: 3px; padding: .75rem; }
+
+.grid-2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); gap: clamp(2rem, 5vw, 4rem); }
+@media (max-width: 60rem) { .grid-2 { grid-template-columns: minmax(0,1fr); } }
+
+/* Definition registers: max-content 1fr with row hairlines. Never a card. */
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 0; }
+.facts dt, .facts dd {
+  padding: .55rem 0; margin: 0; border-top: 1px solid var(--rule);
+}
+.facts dt { font-weight: 700; font-size: .8rem; padding-right: 1.25rem; color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+.facts dd { overflow-wrap: anywhere; }
+@media (max-width: 46rem) {
+  .facts { grid-template-columns: minmax(0,1fr); }
+  .facts dd { padding-top: 0; border-top: 0; padding-bottom: .55rem; }
+}
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .55rem .75rem .55rem 0; border-top: 1px solid var(--rule); vertical-align: top; }
+th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--dim); font-weight: 700; }
+
+/* ---------------------------------------------------------------- controls */
+
+button, .button {
+  font: 700 .92rem/1 var(--text);
+  letter-spacing: .01em;
+  padding: .72rem 1.1rem;
+  border-radius: 3px;
+  border: 1px solid var(--boundary);
+  background: var(--boundary);
+  color: var(--on-boundary);
+  box-shadow: var(--seat);
+  cursor: pointer;
+  transition: background-color .13s ease-out, border-color .13s ease-out, transform .08s ease-out;
+}
+button:hover:not(:disabled) { background: color-mix(in oklab, var(--boundary) 86%, var(--ink)); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: .5; cursor: progress; }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--edge); box-shadow: none; }
+button.ghost:hover:not(:disabled) { background: var(--paper); border-color: var(--ink); }
+
+input, textarea, select {
+  font-family: var(--mono);
+  font-size: .82rem;
+  background: var(--sunk);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  padding: .55rem .6rem;
+  color: var(--ink);
+  caret-color: var(--boundary);
+  width: 100%;
+}
+input:hover, textarea:hover, select:hover { border-color: var(--dim); }
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--boundary); box-shadow: var(--halo);
+}
+textarea { resize: vertical; min-height: 5.5rem; line-height: 1.6; }
+
+label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem; }
+
+/* ---------------------------------------------------------------- state marks */
+
+/*
+ * The Drawn Mark Rule. A text character is never an icon. Every state carries a drawn mark as well
+ * as a colour, so colour alone never carries meaning. The `never` mark is two crossed gradient
+ * strokes rather than a typed ×, because a typed × sits on the text baseline and changes shape with
+ * every fallback face.
+ */
+
+.tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font: 700 .72rem/1.5 var(--text);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: .12rem .4rem;
+}
+.tag::before { content: ""; width: .5rem; height: .5rem; flex: none; }
+
+.tag.inside  { color: var(--inside); }
+.tag.inside::before  { border-radius: 50%; background: currentColor; }
+
+.tag.caution { color: var(--caution); }
+.tag.caution::before { border: 2px solid currentColor; }
+
+.tag.never   { color: var(--never); }
+.tag.never::before {
+  background:
+    linear-gradient(45deg,  transparent 40%, currentColor 40% 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, currentColor 40% 60%, transparent 60%);
+}
+
+.tag.structure { color: var(--structure); }
+.tag.structure::before { background: currentColor; }
+
+.tag.boundary { color: var(--boundary); }
+.tag.boundary::before { background: currentColor; border-radius: 1px; }
+
+/* ---------------------------------------------------------------- hatching */
+
+/*
+ * Hatching for loss and refusal. A refused region is hatched, never flat-filled — chart vocabulary
+ * for "this region is not available", and it carries the meaning without relying on colour alone.
+ */
+.hatched-never {
+  background: repeating-linear-gradient(135deg,
+    var(--sunk) 0 6px,
+    color-mix(in oklab, var(--never) 20%, var(--sunk)) 6px 8px);
+}
+.hatched-boundary {
+  background: repeating-linear-gradient(135deg,
+    var(--sunk) 0 6px,
+    color-mix(in oklab, var(--boundary) 18%, var(--sunk)) 6px 8px);
+}
+
+/* ---------------------------------------------------------------- pending */
+
+/*
+ * Pending readings are static bars, not shimmer. A skeleton that animates implies progress it
+ * cannot measure, and the caution arc exists precisely so "not checked yet" never looks like
+ * "fine" or "failed".
+ */
+.pending-bar {
+  height: .75rem;
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------- top bar */
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: color-mix(in oklab, var(--ground) 88%, transparent);
+  backdrop-filter: saturate(1.2) blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .7rem; }
+.wordmark { display: flex; align-items: center; gap: .55rem; font-size: 1.45rem; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
+.nav { display: flex; gap: 1.1rem; align-items: center; }
+.nav a { color: var(--ink-2); font-size: .88rem; text-decoration: none; }
+.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-decoration-color: var(--boundary); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+@media (max-width: 46rem) { .nav a:not(.keep) { display: none; } }
+
+.footer { border-top: 2px solid var(--ink); background: var(--paper); padding-block: 2.5rem; }
+
+/* ---------------------------------------------------------------- console shell */
+
+/*
+ * The rail. Collapse state lives on <html data-sidebar>, written pre-paint by an inline script in
+ * the console layout so there is no flash on load. CSS reads the attribute; nothing here depends on
+ * React having hydrated.
+ */
+
+.console-shell {
+  display: grid;
+  grid-template-columns: 14.5rem minmax(0, 1fr);
+  gap: 0;
+  min-height: calc(100vh - 3.4rem);
+}
+:root[data-sidebar="collapsed"] .console-shell { grid-template-columns: 3.4rem minmax(0, 1fr); }
+
+.rail {
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+  padding: .8rem .6rem;
+  position: sticky;
+  top: 3.4rem;
+  align-self: start;
+  max-height: calc(100vh - 3.4rem);
+  overflow-y: auto;
+}
+
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .48rem .55rem;
+  border-radius: 3px;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: .875rem;
+  white-space: nowrap;
+}
+.rail-item:hover { background: var(--sunk); color: var(--ink); }
+
+/* Current page gets the boundary magenta — it is the one thing the rail asserts. */
+.rail-item[aria-current="page"] {
+  background: var(--sunk);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: inset 2px 0 0 var(--boundary);
+}
+
+/* Phase 2: visible, labelled, not clickable. Hatched rather than merely faded, so "not built"
+   is carried by texture as well as by opacity. */
+.rail-disabled {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .48rem .55rem;
+  border-radius: 3px;
+  color: var(--dim);
+  opacity: .6;
+  cursor: not-allowed;
+  font-size: .875rem;
+  white-space: nowrap;
+}
+.rail-phase {
+  margin-left: auto;
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 0 .25rem;
+}
+
+.rail-toggle {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  justify-content: flex-start;
+  margin-bottom: .6rem;
+  padding: .48rem .55rem;
+  font-size: .8rem;
+}
+
+:root[data-sidebar="collapsed"] .rail-label { display: none; }
+:root[data-sidebar="collapsed"] .rail-item,
+:root[data-sidebar="collapsed"] .rail-disabled,
+:root[data-sidebar="collapsed"] .rail-toggle { justify-content: center; padding-inline: .3rem; }
+
+.console-main { padding: 1.6rem clamp(1rem, 3vw, 2rem) 4rem; min-width: 0; }
+
+@media (max-width: 60rem) {
+  .console-shell { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--rule);
+    display: flex; gap: .3rem; overflow-x: auto; padding: .5rem;
+  }
+  .rail ul { display: flex; gap: .3rem; }
+  .rail-toggle, .rail-phase { display: none; }
+  .rail-label { display: none; }
+}
+
+/* The auth bar above the console content. */
+.auth-bar {
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule);
+  padding: .55rem clamp(1rem, 3vw, 2rem);
+  background: var(--paper);
+}
+
+/* Stat tiles: a ruled row, never a row of lifted cards. The plate lift is for a chart plate. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.25rem;
+}
+
+/* The decision stream's row-in transition — the single exception to the Still Chart Rule,
+   named in pagestructure.md §9 and guarded by the global reduced-motion clamp. */
+@keyframes row-in { from { opacity: 0; } to { opacity: 1; } }
+.row-in { animation: row-in .18s ease-out both; }
+
+/* Step list on the Get started page. */
+.step {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr auto;
+  gap: .9rem;
+  padding: .9rem 0;
+  border-top: 1px solid var(--rule);
+  align-items: start;
+}
+.step-n {
+  width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  border: 1px solid var(--edge); display: grid; place-items: center;
+  font-weight: 700; font-size: .8rem; font-variant-numeric: tabular-nums;
+}
+.step-n.done { background: var(--ink); color: var(--paper); border-color: var(--ink); }

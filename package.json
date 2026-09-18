@@ -1,0 +1,43 @@
+{
+  "name": "ambit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ambit — a deterministic authority layer that decides whether an autonomous agent is allowed to spend, before any money moves, and proves the decision afterwards.",
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter='./packages/*' run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b --pretty false",
+    "campaign": "tsx scripts/campaign.ts",
+    "claims": "tsx scripts/claims.ts",
+    "verify": "tsx scripts/verify.ts",
+    "probe:dynamic": "tsx scripts/probe-dynamic.ts",
+    "probe:x402": "tsx scripts/probe-x402.ts",
+    "hooks:install": "bash scripts/install-hooks.sh",
+    "dev:authority": "pnpm --filter @ambit/authority run dev",
+    "dev:web": "pnpm --filter @ambit/web run dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "fast-check": "^3.23.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "@ambit/approval": "workspace:*",
+    "@ambit/canon": "workspace:*",
+    "@ambit/fixtures": "workspace:*",
+    "@ambit/payments-x402": "workspace:*",
+    "@ambit/policy-engine": "workspace:*",
+    "@ambit/policy-store": "workspace:*",
+    "@ambit/proof-engine": "workspace:*",
+    "@ambit/receipts": "workspace:*",
+    "@ambit/sdk": "workspace:*",
+    "@ambit/shared": "workspace:*",
+    "@ambit/authority": "workspace:*"
+  }
+}

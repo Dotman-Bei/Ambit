@@ -1,0 +1,98 @@
+{
+  "$comment": "§26 submission checklist artefact. Every field is either a fact or an explicit null with a reason. Nothing here is aspirational.",
+  "product": {
+    "name": "Ambit",
+    "oneLiner": "Ambit decides whether an agent may spend, before the money moves, using a deterministic policy engine and a Dynamic wallet the user still owns and can revoke at any moment.",
+    "tagline": "The model can propose anything. It cannot widen the ambit.",
+    "repo": null,
+    "liveUrl": null,
+    "demoVideoUrl": null,
+    "_urlsNote": "Null because this build has not been published or recorded. §26 requires all submission links to be publicly viewable; a placeholder URL would be worse than an honest null."
+  },
+  "track": {
+    "sponsor": "Dynamic",
+    "prize": "Best Agentic Wallet or Payment Experience",
+    "dynamicSelectedInForm": false,
+    "_note": "Selecting Dynamic in the Runtime submission form is R4 and is an owner action."
+  },
+  "walletPattern": {
+    "pattern": "DELEGATED_ACCESS",
+    "owner": "the end user — their Dynamic embedded wallet, created at sign-in",
+    "agentAuthentication": "user-approved delegated credentials (walletId, walletApiKey, keyShare) delivered to the Ambit webhook, RSA-decrypted and re-encrypted at rest",
+    "revocation": "the user revokes unilaterally in the Dynamic SDK; Dynamic fires wallet.delegation.revoked and Ambit deletes the credentials"
+  },
+  "sdkVersions": {
+    "@dynamic-labs-sdk/client": "1.33.4",
+    "@dynamic-labs-wallet/node-evm": "1.1.12",
+    "x402": "1.2.0 (protocol reference; Ambit implements the client directly to sign through Dynamic)"
+  },
+  "dynamicCallSites": [
+    {
+      "method": "createDelegatedEvmWalletClient",
+      "file": "services/authority/src/dynamic/delegated-client.ts",
+      "lines": "L61-L79",
+      "purpose": "builds the delegated wallet client from the environment credentials"
+    },
+    {
+      "method": "delegatedSignTypedData",
+      "file": "services/authority/src/dynamic/delegated-client.ts",
+      "lines": "L82-L117",
+      "purpose": "THE PAYMENT LEG — signs the EIP-3009 TransferWithAuthorization that becomes the transaction"
+    },
+    {
+      "method": "delegatedSignMessage",
+      "file": "services/authority/src/dynamic/delegated-client.ts",
+      "lines": "L119-L145",
+      "purpose": "delegation liveness probe; proves credentials work without needing a funded wallet"
+    },
+    {
+      "method": "wallet.delegation.created handler",
+      "file": "services/authority/src/dynamic/webhook.ts",
+      "lines": "L88-L145",
+      "purpose": "RSA-decrypts the credential envelope and stores it re-encrypted"
+    },
+    {
+      "method": "wallet.delegation.revoked handler",
+      "file": "services/authority/src/dynamic/webhook.ts",
+      "lines": "L76-L86",
+      "purpose": "deletes the credentials; every later spend request is 403 DELEGATION_REVOKED"
+    },
+    {
+      "method": "getWalletAccounts / hasDelegatedAccess / delegateWaasKeyShares / revokeWaasDelegation",
+      "file": "README.md",
+      "lines": "the client-side surface, documented with the ./waas subpath requirement",
+      "purpose": "sign-in, delegation grant and revoke in the browser"
+    }
+  ],
+  "rail": {
+    "protocol": "x402",
+    "scheme": "exact",
+    "asset": "USDC",
+    "network": "base-sepolia (eip155:84532) by default; base (eip155:8453) supported",
+    "settlementMechanism": "EIP-3009 transferWithAuthorization signed as EIP-712 typed data and submitted by a facilitator",
+    "standingAllowance": "none — approve is never called on any ERC-20"
+  },
+  "transactionHashes": [],
+  "_transactionHashesNote": "EMPTY. No payment has been executed in this build: no Dynamic environment and no x402 facilitator were configured. This is R3 and gate G4, and it is the largest gap in the submission. The campaign records case C1x as NOT_ATTEMPTED rather than simulating it. See LIMITATIONS.md §10.",
+  "evidence": {
+    "campaignRuns": "evidence/campaign/",
+    "latestCampaign": "10 of 11 cases matched; C1x recorded NOT_ATTEMPTED",
+    "claimLedger": "evidence/claims.json, rendered to docs/claims.md",
+    "tests": 152,
+    "verification": "pnpm verify — 8 checks, all passing"
+  },
+  "phase1Gate": {
+    "met": ["G3", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12"],
+    "notMet": ["G1", "G2", "G4"],
+    "_note": "G5 and G7 are met at integration level. The three not met all depend on provisioning a Dynamic environment with delegated access — §28 kill-criterion 1, an OWNER DECISION."
+  },
+  "security": {
+    "secretsInRepo": false,
+    "secretScanHook": "scripts/scan-secrets.sh, installed via core.hooksPath, tested against a planted secret",
+    "knownOpenIssue": "route-layer authentication is a header, not a signature. See SECURITY.md and DECISIONS.md D-009. Must be closed before public deployment."
+  },
+  "token": {
+    "launched": false,
+    "_note": "Ambit does not launch a token. If that ever changes it must be launched, funded and distributed via Bankr."
+  }
+}

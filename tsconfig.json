@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/canon" },
+    { "path": "./packages/policy-engine" },
+    { "path": "./packages/approval" },
+    { "path": "./packages/policy-store" },
+    { "path": "./packages/payments-x402" },
+    { "path": "./packages/proof-engine" },
+    { "path": "./packages/receipts" },
+    { "path": "./packages/ambit-sdk" },
+    { "path": "./services/authority" }
+  ]
+}
