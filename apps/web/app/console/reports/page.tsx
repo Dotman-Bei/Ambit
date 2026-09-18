@@ -101,13 +101,13 @@ export default function ReportsPage() {
 
       <section style={{ borderTop: "2px solid var(--ink)", paddingTop: "1rem", marginTop: "2.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "1rem" }}>
-          <h3>AMBIT_EXCEEDED — by rule</h3>
+          <h3>AMBIT_EXCEEDED by rule</h3>
           <span className="tag never">{stats?.refused ?? 0} refusals</span>
         </div>
 
         <p className="note" style={{ marginTop: ".6rem", maxWidth: "60ch" }}>
           <code>AMBIT_EXCEEDED</code> is the umbrella class these codes belong to. It is used here, in
-          aggregate, and <strong>never on its own</strong> — a refusal that names only the class and
+          aggregate, and <strong>never on its own</strong>. A refusal that names only the class and
           not the rule is a defect. Every row below names the specific rule-level code.
         </p>
 
@@ -163,11 +163,11 @@ export default function ReportsPage() {
         <h3>Verdict split</h3>
         <dl className="facts" style={{ marginTop: "1rem" }}>
           <dt><VerdictChip verdict="ALLOW" /></dt>
-          <dd>{stats?.allowed ?? "—"} — passed the rules as configured. Not a judgement that the purchase is wise.</dd>
+          <dd>{stats?.allowed ?? "—"} passed the rules as configured. Not a judgement that the purchase is wise.</dd>
           <dt><VerdictChip verdict="ESCALATE" /></dt>
-          <dd>{stats?.escalated ?? "—"} — above the threshold, a human decides. The escalation writer is not wired in this phase.</dd>
+          <dd>{stats?.escalated ?? "—"} sat above the threshold, where a human decides. The escalation writer is not wired in this phase.</dd>
           <dt><VerdictChip verdict="BLOCK" /></dt>
-          <dd>{stats?.refused ?? "—"} — refused by a named rule, with zero movement.</dd>
+          <dd>{stats?.refused ?? "—"} refused by a named rule, with zero movement.</dd>
         </dl>
       </section>
 
@@ -176,7 +176,7 @@ export default function ReportsPage() {
         <ul className="note" style={{ marginTop: "1rem", maxWidth: "60ch", paddingLeft: "1.1rem" }}>
           <li>These are counts from <strong>this process&rsquo;s memory</strong>. Storage is not durable, so a restart resets them.</li>
           <li style={{ marginTop: ".4rem" }}>A refusal count proves the engine refused those cases. It says nothing about attacks not represented here.</li>
-          <li style={{ marginTop: ".4rem" }}>A high refusal count is not a quality signal in either direction — it reflects what was proposed.</li>
+          <li style={{ marginTop: ".4rem" }}>A high refusal count is not a quality signal in either direction; it reflects what was proposed.</li>
         </ul>
       </section>
     </>

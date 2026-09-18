@@ -31,7 +31,7 @@ const API = process.env.NEXT_PUBLIC_AMBIT_API ?? "http://127.0.0.1:4020";
  */
 const CAMPAIGN = [
   { id: "C1", input: "In-policy request, $0.05", expected: "ALLOW", outcome: "ALLOW", matched: true, proves: "the payment path works" },
-  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED_IN_CAMPAIGN", matched: true, proves: "proven separately — see Transactions below" },
+  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED_IN_CAMPAIGN", matched: true, proves: "proven separately: see Transactions below" },
   { id: "C2", input: "Same request inside the TTL", expected: "BLOCK DUPLICATE_INTENT", outcome: "DUPLICATE_INTENT", matched: true, proves: "the eleven-purchases problem" },
   { id: "C3", input: "Approved digest, amount mutated", expected: "BLOCK DIGEST_MISMATCH", outcome: "DIGEST_MISMATCH", matched: true, proves: "approve $5, $500 cannot leave" },
   { id: "C4", input: "Above perCall.cap", expected: "BLOCK PER_CALL_CAP_EXCEEDED", outcome: "PER_CALL_CAP_EXCEEDED", matched: true, proves: "the human's limit binds" },
@@ -84,7 +84,7 @@ export default function Explorer() {
             <dt>Rail</dt>
             <dd>x402, scheme <Mono>exact</Mono>, settled as EIP-3009 <Mono>transferWithAuthorization</Mono></dd>
             <dt>Wallet pattern</dt>
-            <dd>delegated access — the wallet is the end user&rsquo;s</dd>
+            <dd>delegated access: the wallet is the end user&rsquo;s</dd>
             <dt>Service</dt>
             <dd>
               {reachable === null ? (
@@ -114,7 +114,7 @@ export default function Explorer() {
           </div>
           <p className="note" style={{ marginTop: ".6rem", maxWidth: "60ch" }}>
             Every case below is run against the real engine, and the outcome shown is what actually
-            happened — including where it differs from what was expected.
+            happened, including where it differs from what was expected.
           </p>
 
           <div className="table-wrap" style={{ marginTop: "1.2rem" }}>

@@ -104,7 +104,7 @@ function ReceiptBody({ params }: { params: Promise<{ intentId: string }> }) {
           <span className="tag never">authority service unreachable</span>
           <p className="note" style={{ marginTop: ".75rem" }}>
             The receipt could not be read. This is a failure to reach the service, which is a different
-            thing from the receipt not existing — and it is reported as such rather than as
+            thing from the receipt not existing, and it is reported as such rather than as
             &ldquo;not found&rdquo;.
           </p>
         </div>
@@ -119,7 +119,7 @@ function ReceiptBody({ params }: { params: Promise<{ intentId: string }> }) {
         <div className="panel" style={{ marginTop: "2rem", borderColor: "var(--never)" }}>
           <span className="tag never">NOT_FOUND</span>
           <p className="note" style={{ marginTop: ".75rem" }}>
-            No receipt exists under <code>{id}</code>. This is an inconsistency, not a wait — it is
+            No receipt exists under <code>{id}</code>. This is an inconsistency, not a wait; it is
             distinct from <code>PENDING</code>, and nothing here will appear later.
           </p>
         </div>
@@ -289,7 +289,7 @@ function ReceiptBody({ params }: { params: Promise<{ intentId: string }> }) {
         </p>
         {receipt.delivery.tier !== "T2_INDEPENDENT" ? (
           <p className="note" style={{ marginTop: ".6rem" }}>
-            Only <code>T2_INDEPENDENT</code> — a source that is not the merchant — counts as
+            Only <code>T2_INDEPENDENT</code> (a source that is not the merchant) counts as
             verification. A provider&rsquo;s own claim is never presented as independent, and where no
             independent source exists this says <code>T0_NONE</code> rather than quietly downgrading.
           </p>
@@ -324,7 +324,7 @@ function ReceiptBody({ params }: { params: Promise<{ intentId: string }> }) {
       <p className="note" style={{ marginTop: "2.5rem", paddingTop: "1rem", borderTop: "1px solid var(--rule)" }}>
         Withheld from this public view: the raw request payload, the correlation id, the wallet owner,
         and which channel resolved an approval. The public view is built by naming the fields that may
-        be published, never by deleting fields from the private one — so a field added later cannot
+        be published, never by deleting fields from the private one, so a field added later cannot
         silently become public.
       </p>
     </main>

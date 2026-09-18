@@ -102,7 +102,7 @@ export default function LedgerPage() {
           label="Reserved today"
           value={reserved === null ? null : usdc(String(reserved))}
           emphasis="boundary"
-          detail="still-executable authority — not spend"
+          detail="still-executable authority, not spend"
         />
         <StatTile
           label="Entries"
@@ -114,7 +114,7 @@ export default function LedgerPage() {
       <div className="panel" style={{ marginTop: "1.5rem" }}>
         <p className="note" style={{ margin: 0, maxWidth: "62ch" }}>
           <strong>Why they are kept apart.</strong> Rule 12 <code>budget.daily</code> enforces against{" "}
-          <em>effective</em> usage — settled plus reserved — so ten pending approvals cannot jointly
+          <em>effective</em> usage (settled plus reserved), so ten pending approvals cannot jointly
           exceed a budget that fits one. But a reservation is not a purchase: it can lapse unspent, and
           reporting it as spend would tell you money left when it did not. The two totals come from
           separate accessors so that no query can accidentally sum them.
@@ -183,7 +183,7 @@ export default function LedgerPage() {
         <dl className="facts" style={{ marginTop: "1rem" }}>
           <dt>Durable</dt>
           <dd>
-            Storage is in-memory in this phase. Restarting the service empties it — the ledger shows
+            Storage is in-memory in this phase. Restarting the service empties it, and the ledger shows
             this session, not an account history.
           </dd>
           <dt>Double-entry</dt>

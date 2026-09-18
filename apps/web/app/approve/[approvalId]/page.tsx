@@ -101,7 +101,7 @@ export default function Approve({ params }: { params: Promise<{ approvalId: stri
         <span className="tag never">NOT_FOUND</span>
         <p className="note" style={{ marginTop: ".6rem" }}>
           No held decision exists under <Mono>{approvalId}</Mono>. This is an inconsistency, not a
-          wait — nothing here will appear later.
+          wait. Nothing here will appear later.
         </p>
       </div>,
     );
@@ -149,7 +149,7 @@ export default function Approve({ params }: { params: Promise<{ approvalId: stri
               Approval digest
             </dt>
             <dd style={{ margin: ".2rem 0 0" }}>
-              <Mono>{held.digest ?? "not minted — no quote has been read for this decision yet"}</Mono>
+              <Mono>{held.digest ?? "not minted: no quote has been read for this decision yet"}</Mono>
             </dd>
           </div>
         </dl>
@@ -173,7 +173,7 @@ export default function Approve({ params }: { params: Promise<{ approvalId: stri
             <p className="note" style={{ marginTop: ".5rem" }}>
               The escalation writer is not wired for this route, so this decision cannot be resolved
               here. The request returns <code>503</code> and <strong>no fee is taken</strong>. It does
-              not fall through to auto-approval — refusing is the correct behaviour and it ships as a
+              not fall through to auto-approval. Refusing is the correct behaviour and it ships as a
               refusal rather than being presented as a feature.
             </p>
           </div>

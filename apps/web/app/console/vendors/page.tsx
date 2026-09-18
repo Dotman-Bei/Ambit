@@ -66,7 +66,7 @@ export default function VendorsPage() {
 
       <p className="lead" style={{ maxWidth: "58ch", marginBottom: "1.5rem" }}>
         The only base URLs this service will fetch. A <code>SpendIntent</code> names a provider and a
-        capability — two lookup keys — and has no URL field, so there is nowhere to put an arbitrary
+        capability (two lookup keys) and has no URL field, so there is nowhere to put an arbitrary
         one.
       </p>
 
@@ -91,7 +91,7 @@ export default function VendorsPage() {
               {p.kind === "PROJECT_OPERATED" ? (
                 <p className="note" style={{ marginTop: ".6rem", maxWidth: "56ch" }}>
                   Operated by this project. It emits a real 402, requires a real signature over the
-                  exact terms, and settles through a real facilitator — so a payment to it is a real
+                  exact terms, and settles through a real facilitator, so a payment to it is a real
                   payment. It is <strong>not</strong> evidence of third-party adoption, and it is
                   labelled this way everywhere it appears, including on every receipt.
                 </p>

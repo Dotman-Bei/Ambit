@@ -53,7 +53,7 @@ export default function GetStarted() {
     {
       n: 1,
       title: "Sign in",
-      body: "A Dynamic embedded wallet is created in your name. It is yours — Ambit never holds it.",
+      body: "A Dynamic embedded wallet is created in your name. It is yours. Ambit never holds it.",
       done: unreachable ? null : delegation !== null && delegation.walletAddress !== null,
       doneWhen: "the wallet address is shown",
       action: { label: "Wallet", href: "/console/wallet" },
@@ -69,7 +69,7 @@ export default function GetStarted() {
     {
       n: 3,
       title: "Set your ambit",
-      body: "Caps, allowlists, categories, expiry. The policy is persisted and its hash displayed — every decision names the hash it was judged against.",
+      body: "Caps, allowlists, categories, expiry. The policy is persisted and its hash displayed. Every decision names the hash it was judged against.",
       done: unreachable ? null : policy !== null,
       doneWhen: "a policy is persisted and its hash displayed",
       action: { label: "Set the ambit", href: "/console/policy" },

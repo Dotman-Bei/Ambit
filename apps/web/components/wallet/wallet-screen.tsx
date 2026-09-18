@@ -97,7 +97,7 @@ export function WalletScreen() {
               <span className="note">not signed in</span>
             )}
             <span className="note" style={{ display: "block", marginTop: ".3rem" }}>
-              the key the authority service stores this delegation under — it must match the{" "}
+              the key the authority service stores this delegation under, and it must match the{" "}
               <code>userId</code> the webhook carried
             </span>
           </dd>
@@ -110,11 +110,11 @@ export function WalletScreen() {
         <p style={{ marginTop: ".7rem", fontSize: "1.3rem", fontWeight: 700 }}>Delegated access</p>
         <dl className="facts" style={{ marginTop: ".8rem" }}>
           <dt>Owner</dt>
-          <dd>the end user — their Dynamic embedded wallet, created at sign-in</dd>
+          <dd>the end user: their Dynamic embedded wallet, created at sign-in</dd>
           <dt>Agent auth</dt>
           <dd>
-            user-approved delegated credentials — <Mono>walletId</Mono>, <Mono>walletApiKey</Mono>,{" "}
-            <Mono>keyShare</Mono> — delivered to Ambit&rsquo;s webhook, RSA-decrypted and re-encrypted
+            user-approved delegated credentials (<Mono>walletId</Mono>, <Mono>walletApiKey</Mono>,{" "}
+            <Mono>keyShare</Mono>) delivered to Ambit&rsquo;s webhook, RSA-decrypted and re-encrypted
             at rest
           </dd>
           <dt>Revocation</dt>
@@ -171,7 +171,7 @@ export function WalletScreen() {
               <span className="tag caution">client not ready</span>
             )}
             <span className="note" style={{ display: "block", marginTop: ".3rem" }}>
-              from <code>hasDelegatedAccess()</code> — the client SDK&rsquo;s own view
+              from <code>hasDelegatedAccess()</code>, the client SDK&rsquo;s own view
             </span>
           </dd>
           <dt>Server says</dt>
@@ -180,7 +180,7 @@ export function WalletScreen() {
               {delegation?.revokedAt ? "revoked" : delegation?.granted ? "credentials held" : "none held"}
             </span>
             <span className="note" style={{ display: "block", marginTop: ".3rem" }}>
-              from <code>GET /delegation/status</code> — <strong>the authoritative answer</strong>
+              from <code>GET /delegation/status</code>, <strong>the authoritative answer</strong>
             </span>
           </dd>
         </dl>
@@ -230,15 +230,15 @@ export function WalletScreen() {
               const r = await post<Probe>("/delegation/probe");
               setProbing(false);
               if (r.state === "ok") setProbe(r.data);
-              else if (r.state === "error") setProbeError(`${r.code}${r.detail ? ` — ${r.detail}` : ""}`);
+              else if (r.state === "error") setProbeError(`${r.code}${r.detail ? `: ${r.detail}` : ""}`);
               else setProbeError("the authority service could not be reached");
             }}
           >
             {probing ? "Signing…" : "Sign a test message"}
           </button>
           <p className="note" style={{ marginTop: ".4rem", maxWidth: "48ch" }}>
-            Signs a fixed string with your delegated share. Moves no money and authorises nothing —
-            it proves Ambit can actually sign, which decryption alone does not.
+            Signs a fixed string with your delegated share. Moves no money and authorises nothing. It
+            proves Ambit can actually sign, which decryption alone does not.
           </p>
 
           {probe ? (
@@ -269,7 +269,7 @@ export function WalletScreen() {
         <h3>Delegation webhook events</h3>
         <p className="note" style={{ marginTop: ".5rem", maxWidth: "54ch" }}>
           Only transitions this page actually observed are listed. No event is shown that was not
-          witnessed — a log that invented entries would be worse than no log.
+          witnessed. A log that invented entries would be worse than no log.
         </p>
         {log.length === 0 ? (
           <p className="note" style={{ marginTop: ".9rem" }}>

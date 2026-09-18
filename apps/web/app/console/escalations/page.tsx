@@ -80,7 +80,7 @@ export default function Escalations() {
           <span className="tag caution">nothing held</span>
           <p className="note" style={{ marginTop: ".6rem" }}>
             No decision has reached the escalation threshold. This is an empty inbox, which is a
-            different statement from the banner above — that one says the approval path could not
+            different statement from the banner above. That one says the approval path could not
             answer, this one says there is nothing to answer about.
           </p>
         </div>

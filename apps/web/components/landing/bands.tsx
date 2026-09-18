@@ -48,13 +48,14 @@ export function HeroBand() {
         <div style={{ maxWidth: "34rem" }}>
           <span className="tag boundary">Signing authority</span>
           <h1 className="display" style={{ marginTop: "1.25rem" }}>
-            The model can propose anything.
+            Every agent payment is judged
             <br />
-            <span style={{ color: "var(--boundary-ink)" }}>It cannot widen the ambit.</span>
+            <span style={{ color: "var(--boundary-ink)" }}>before the money moves.</span>
           </h1>
           <p className="lead" style={{ marginTop: "1.5rem" }}>
-            Ambit decides whether an agent may spend, before the money moves, using a deterministic
-            policy engine and a Dynamic wallet the user still owns and can revoke at any moment.
+            Fifteen deterministic rules, in a fixed order, and the first one to refuse goes on the
+            receipt. The wallet stays the user&rsquo;s: a Dynamic delegated wallet they can revoke at
+            any moment.
           </p>
           <div style={{ display: "flex", gap: ".75rem", marginTop: "2rem", flexWrap: "wrap" }}>
             <a className="button" href="/console" style={{ textDecoration: "none" }}>Set a spend ambit</a>
@@ -209,7 +210,7 @@ export function OwnershipBand() {
             <dt>Pattern</dt>
             <dd><strong>Delegated access</strong></dd>
             <dt>Owner</dt>
-            <dd>the end user — not Ambit, and not a developer account</dd>
+            <dd>the end user, not Ambit, and not a developer account</dd>
             <dt>Agent auth</dt>
             <dd>
               user-approved delegated credentials (<code>walletId</code>, <code>walletApiKey</code>,{" "}
@@ -275,7 +276,7 @@ export function LiveProofBand() {
       <h2>The evidence</h2>
       <p className="lead" style={{ marginTop: "1rem", maxWidth: "54ch" }}>
         An agent request that violates policy produces a named refusal and no payment. Both outcomes
-        are provable — from a transaction hash, or from the absence of one.
+        are provable: from a transaction hash, or from the absence of one.
       </p>
 
       <div className="grid-2" style={{ marginTop: "2rem" }}>
@@ -288,7 +289,7 @@ export function LiveProofBand() {
             >
               <span className="tag never">no transaction yet</span>
               <p className="note" style={{ marginTop: ".6rem" }}>
-                No payment has settled, so there is no hash to show — and an example hash here would be
+                No payment has settled, so there is no hash to show, and an example hash here would be
                 indistinguishable from a real one.
               </p>
             </div>

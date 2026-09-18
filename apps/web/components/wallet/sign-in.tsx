@@ -41,7 +41,7 @@ export function SignIn({ onSignedIn, signedIn }: { onSignedIn: () => void; signe
       const v = (cause as Record<string, unknown>)?.[k];
       if (v !== undefined && typeof v !== "object") extras.push(`${k}=${String(v)}`);
     }
-    setError(`[${phase}] ${e?.name ?? "Error"}: ${e?.message ?? String(cause)}${extras.length ? ` — ${extras.join(" ")}` : ""}`);
+    setError(`[${phase}] ${e?.name ?? "Error"}: ${e?.message ?? String(cause)}${extras.length ? `: ${extras.join(" ")}` : ""}`);
     console.error("ambit sign-in failure", cause);
   };
 

@@ -196,7 +196,7 @@ export default function DecisionStream() {
               ) : null}
               {latest.proposal ? (
                 <p className="note" style={{ marginTop: ".5rem" }}>
-                  Reserved {latest.proposal.budgetDeltaAtomic} atomic units —{" "}
+                  Reserved {latest.proposal.budgetDeltaAtomic} atomic units:{" "}
                   <em>reserved authority, not spend. No money has moved.</em>
                 </p>
               ) : null}
@@ -259,7 +259,7 @@ export default function DecisionStream() {
 
       {rows && rows.length > 0 ? (
         <p className="note" style={{ marginTop: "1rem" }}>
-          A dash in the Tx column is not a missing value. It means no transaction exists — which for a
+          A dash in the Tx column is not a missing value. It means no transaction exists, which for a
           refusal is the evidence.
         </p>
       ) : null}

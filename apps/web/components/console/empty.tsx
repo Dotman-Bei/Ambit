@@ -42,7 +42,7 @@ const COPY: Record<EmptyState, { mark: "caution" | "never"; title: string; body:
   UNREACHABLE: {
     mark: "never",
     title: "The authority service could not be reached.",
-    body: "This is a failure to reach the service, which is a different thing from an empty result — and it is reported as such rather than as a spinner that never resolves.",
+    body: "This is a failure to reach the service, which is a different thing from an empty result, and it is reported as such rather than as a spinner that never resolves.",
   },
 };
 

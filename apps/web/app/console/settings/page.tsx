@@ -82,7 +82,7 @@ export default function Settings() {
             </dl>
             <p className="note" style={{ marginTop: ".8rem" }}>
               Every line is a capability <em>label</em>, not a claim of success. No secret is shown
-              here and none is fetchable — credentials are never returned by any API.
+              here and none is fetchable. Credentials are never returned by any API.
             </p>
           </section>
 
@@ -90,7 +90,7 @@ export default function Settings() {
             <span className="placard-label">Provider registry</span>
             <p className="note" style={{ marginTop: ".5rem", maxWidth: "54ch" }}>
               The only source of a URL this service will fetch. A <code>SpendIntent</code> names a
-              provider and a capability — two lookup keys — and has no URL field, so there is nowhere
+              provider and a capability (two lookup keys) and has no URL field, so there is nowhere
               to put one.
             </p>
             <dl className="facts" style={{ marginTop: ".8rem" }}>

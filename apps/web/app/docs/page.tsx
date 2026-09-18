@@ -119,7 +119,7 @@ export default function Docs() {
 
             <Step n={1} title="Sign in">
               <p style={{ margin: 0 }}>
-                A wallet is created in your name. It is yours — Ambit never holds it.
+                A wallet is created in your name. It is yours. Ambit never holds it.
               </p>
             </Step>
             <Step n={2} title="Grant authority">
@@ -162,7 +162,7 @@ export default function Docs() {
                 <tbody>
                   <tr><td><a href="/console">Overview</a></td><td>What was allowed, what was refused, and whether Ambit can sign right now</td></tr>
                   <tr><td><a href="/console/wallet">Wallet</a></td><td>Your address, the authority you granted, and the button that takes it back</td></tr>
-                  <tr><td><a href="/console/policy">Ambit</a></td><td>The policy editor — all fifteen rules and their current values</td></tr>
+                  <tr><td><a href="/console/policy">Ambit</a></td><td>The policy editor: all fifteen rules and their current values</td></tr>
                   <tr><td><a href="/console/decisions">Decision stream</a></td><td>Every request, the rules that ran, and the verdict</td></tr>
                   <tr><td><a href="/console/ledger">Ledger</a></td><td>Money that left, kept separate from money merely set aside</td></tr>
                   <tr><td><a href="/console/vendors">Vendors</a></td><td>The providers Ambit is allowed to pay</td></tr>
@@ -201,7 +201,7 @@ export default function Docs() {
             </p>
             <p>
               An expired policy authorises nothing. There is also an absolute cap that no other
-              setting can raise — a ceiling above the ceiling.
+              setting can raise: a ceiling above the ceiling.
             </p>
             <p>
               Ambit enforces the policy you give it. It does not review your policy for sense: a
@@ -215,7 +215,7 @@ export default function Docs() {
             <p>
               Every request is checked against all fifteen, always in the same order. The{" "}
               <strong>first one that fails</strong> decides the outcome, and its name goes on the
-              receipt — so a refusal is never just &ldquo;blocked&rdquo;.
+              receipt, so a refusal is never just &ldquo;blocked&rdquo;.
             </p>
             <p>
               All fifteen run even after one has failed, so you can see the whole picture rather than
@@ -274,8 +274,8 @@ export default function Docs() {
               An approval authorises one exact payment, not &ldquo;a purchase&rdquo;.
             </p>
             <p>
-              When a request is approved, Ambit takes a fingerprint of everything that matters — the
-              amount, the payee, the item, the deadline, the wallet — and the approval is tied to that
+              When a request is approved, Ambit takes a fingerprint of everything that matters (the
+              amount, the payee, the item, the deadline, the wallet), and the approval is tied to that
               fingerprint.
             </p>
             <p>
@@ -284,7 +284,7 @@ export default function Docs() {
             </p>
             <p>
               The same check is what stops an agent overpaying. The amount that gets authorised is the
-              one the provider actually asked for, read at the moment of payment — not the figure the
+              one the provider actually asked for, read at the moment of payment, not the figure the
               agent proposed.
               {FIRST_SETTLEMENT ? (
                 <>
@@ -302,7 +302,7 @@ export default function Docs() {
             <p className="lead-in">You do. This is the part worth understanding properly.</p>
             <p>
               The wallet is yours, created in your name when you sign in. Ambit never holds it. What
-              you grant is a <em>share</em> that lets Ambit sign on your behalf — and only within your
+              you grant is a <em>share</em> that lets Ambit sign on your behalf, and only within your
               policy.
             </p>
             <p>
@@ -316,7 +316,7 @@ export default function Docs() {
             </p>
             <p>
               <strong>Said plainly:</strong> while a grant is active, Ambit holds a signing share. It
-              cannot spend outside your policy and it cannot spend after you revoke — but this is not
+              cannot spend outside your policy and it cannot spend after you revoke, but this is not
               a trustless arrangement, and the documentation does not pretend otherwise.
             </p>
           </section>
@@ -383,7 +383,7 @@ export default function Docs() {
             </div>
             <p style={{ marginTop: "1rem" }}>
               If a payment leaves Ambit and the answer never comes back, the request is held for a
-              person to look at. It is never retried automatically — a retry could buy the same thing
+              person to look at. It is never retried automatically: a retry could buy the same thing
               twice.
             </p>
           </section>
@@ -409,7 +409,7 @@ export default function Docs() {
               </li>
               <li>
                 <strong>One network, one asset.</strong> Paying elsewhere is refused rather than
-                improvised — Ambit will not bridge or swap to make a payment work.
+                improvised. Ambit will not bridge or swap to make a payment work.
               </li>
               <li>
                 <strong>Records are not permanent yet.</strong> Restarting the service clears them.

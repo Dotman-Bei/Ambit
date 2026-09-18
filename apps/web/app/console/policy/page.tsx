@@ -152,7 +152,7 @@ export default function PolicyPage() {
       void load();
     } else if (result.state === "error") {
       // §9: a validation error names the field. It does not say "invalid input".
-      setMessage({ tone: "never", label: "refused", text: `${result.code} — ${result.detail}` });
+      setMessage({ tone: "never", label: "refused", text: `${result.code}: ${result.detail}` });
     } else {
       setMessage({ tone: "never", label: "refused", text: "The authority service could not be reached." });
     }
@@ -202,7 +202,7 @@ export default function PolicyPage() {
       label: route === "pause" ? "not paused" : "not resumed",
       text:
         result.state === "error"
-          ? `The service refused the ${route}: ${result.code}${result.detail ? ` — ${result.detail}` : ""}. Nothing changed.`
+          ? `The service refused the ${route}: ${result.code}${result.detail ? `: ${result.detail}` : ""}. Nothing changed.`
           : `The authority service could not be reached, so whether the ${route} was applied is unknown. The list below is from the last successful read.`,
     });
   };
@@ -256,7 +256,7 @@ export default function PolicyPage() {
                   </p>
                 ) : field === null ? (
                   <p className="note" style={{ margin: 0 }}>
-                    No setting — this rule is derived from the request itself.
+                    No setting: this rule is derived from the request itself.
                   </p>
                 ) : (
                   <>
