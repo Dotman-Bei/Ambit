@@ -154,6 +154,32 @@ export async function signProbeMessage(
  */
 function translateDynamicError(cause: unknown, whileDoing: string): AmbitError {
   const message = cause instanceof Error ? cause.message : String(cause);
+
+  /**
+   * Log what the SDK actually returned before collapsing it to a reason code.
+   *
+   * The mapping below is deliberately coarse — a caller needs a named refusal, not a vendor error —
+   * but that coarseness hides the one detail that makes a failure diagnosable. "Forbidden" alone
+   * cannot distinguish an API key without signing scope from a malformed key share from a revoked
+   * delegation. No credential material is logged: only the error's own fields.
+   */
+  {
+    const e = cause as Record<string, unknown> | null;
+    const parts: string[] = [`name=${(e?.["name"] as string) ?? typeof cause}`, `message=${JSON.stringify(message)}`];
+    for (const k of ["code", "status", "statusCode", "shortMessage", "details", "docsUrl"]) {
+      const v = e?.[k];
+      if (v !== undefined && typeof v !== "object") parts.push(`${k}=${String(v)}`);
+    }
+    const body = e?.["response"] ?? e?.["body"] ?? e?.["cause"];
+    if (body !== undefined) {
+      try {
+        parts.push(`body=${JSON.stringify(body).slice(0, 400)}`);
+      } catch {
+        /* not serialisable */
+      }
+    }
+    console.warn(`[dynamic] ${whileDoing} failed: ${parts.join(" ")}`);
+  }
   const lowered = message.toLowerCase();
 
   // A revoked delegation surfaces as an authorisation failure from Dynamic. Naming it precisely is

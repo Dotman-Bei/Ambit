@@ -17,7 +17,7 @@ deleted — the gap is part of the record.
 | Revocation stops the agent | `INTEGRATION_TESTED` | `INTEGRATION_TESTED` | at target |
 | Delivery is verified against an independent source | `NOT_YET_PROVEN` | `NOT_YET_PROVEN` | at target |
 | No standing allowance exists: approve is never called on any ERC-20 | `UNIT_TESTED` | `UNIT_TESTED` | at target |
-| Every Dynamic SDK call site is a real method on the pinned package version | `UNIT_TESTED` | `UNIT_TESTED` | at target |
+| Every Dynamic SDK call site is a real method on the pinned package version | `INTEGRATION_TESTED` | `INTEGRATION_TESTED` | at target |
 | The x402 challenge is parsed from the response body, with a header fallback | `UNIT_TESTED` | `UNIT_TESTED` | at target |
 
 ## Proof levels
@@ -86,6 +86,7 @@ _None. This claim is not proven._
 - services/authority/src/app.test.ts — the revocation webhook deletes the credentials and the next execute returns 403 DELEGATION_REVOKED
 - evidence/campaign/ — case C9 measures the elapsed time from webhook to refusal
 - services/authority/src/dynamic/credentials.ts — revoke() is a delete, not a status flag, so there is no flag to ignore
+- 2026-09-18: revoke/grant cycles exercised repeatedly against the live Dynamic environment; each revoke deleted the stored credentials and each grant re-delivered them through the webhook.
 
 **Why it is not higher:** The revocation is driven by a webhook POST in the test rather than by a real user clicking revoke in the Dynamic SDK. The end-to-end version needs a live Dynamic environment.
 
@@ -107,12 +108,12 @@ _None. This claim is not proven._
 
 ### Every Dynamic SDK call site is a real method on the pinned package version
 
-`UNIT_TESTED` (target `UNIT_TESTED`)
+`INTEGRATION_TESTED` (target `INTEGRATION_TESTED`)
 
 - .agents/skills/dynamic/SURFACE.md — signatures read from the published .d.ts of @dynamic-labs-wallet/node-evm@1.1.12 and @dynamic-labs-sdk/client@1.33.4, with dist shasums recorded
 - The workspace typechecks against the real packages, so an invented method name would fail the build
-
-**Why it is not higher:** Type-level verification proves the methods exist and are called correctly. It does not prove they succeed against a live Dynamic environment — that is what the delegation spike is for.
+- A live delegation completed end to end on 2026-09-18: Dynamic delivered wallet.delegation.created over HTTPS, the HMAC verified, both JWE secrets decrypted with the registered key pair, and the credentials were stored re-encrypted (delegationsHeld: 1).
+- 2026-09-18: delegatedSignMessage returned a 65-byte ECDSA signature that recovers to the user's wallet address 0x14f4b95b…ecf51, verified independently with viem. See evidence/delegation/00-probe-2026-09-18.md
 
 ### The x402 challenge is parsed from the response body, with a header fallback
 

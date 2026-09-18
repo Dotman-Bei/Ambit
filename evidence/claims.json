@@ -1,5 +1,5 @@
 {
-  "$comment": "§23 The claim and evidence ledger. THIS FILE IS THE SOURCE OF TRUTH. docs/claims.md is generated from it and is never hand-edited. A claim may only carry a proof level its evidence supports. LIVE_TESTNET or above requires a transaction hash a reader can check independently. Unproven claims stay here at NOT_YET_PROVEN rather than being deleted — the gap is part of the record.",
+  "$comment": "\u00a723 The claim and evidence ledger. THIS FILE IS THE SOURCE OF TRUTH. docs/claims.md is generated from it and is never hand-edited. A claim may only carry a proof level its evidence supports. LIVE_TESTNET or above requires a transaction hash a reader can check independently. Unproven claims stay here at NOT_YET_PROVEN rather than being deleted \u2014 the gap is part of the record.",
   "proofLevels": [
     "SPECIFIED",
     "UNIT_TESTED",
@@ -16,9 +16,9 @@
       "targetLevel": "UNIT_TESTED",
       "actualLevel": "UNIT_TESTED",
       "evidence": [
-        "packages/policy-engine/src/decide.ts — no import performs I/O; the decision window is passed in by the caller",
-        "packages/policy-engine/src/decide.test.ts — 47 tests, including ten identical calls producing byte-identical decisions",
-        "packages/policy-engine/src/properties.test.ts — fast-check, 500 runs: no intent above hardCap.absolute returns ALLOW"
+        "packages/policy-engine/src/decide.ts \u2014 no import performs I/O; the decision window is passed in by the caller",
+        "packages/policy-engine/src/decide.test.ts \u2014 47 tests, including ten identical calls producing byte-identical decisions",
+        "packages/policy-engine/src/properties.test.ts \u2014 fast-check, 500 runs: no intent above hardCap.absolute returns ALLOW"
       ]
     },
     {
@@ -27,9 +27,9 @@
       "targetLevel": "UNIT_TESTED",
       "actualLevel": "UNIT_TESTED",
       "evidence": [
-        "packages/policy-engine/src/rules.ts — RULES array order is the §10.1 order",
-        "packages/policy-engine/src/decide.test.ts — a guard test fails if an enforced rule lacks a pass row or a fail row",
-        "services/authority/src/app.test.ts — GET /rules reports exactly vendor.lcbFloor and proof.tierRequired as not enforced"
+        "packages/policy-engine/src/rules.ts \u2014 RULES array order is the \u00a710.1 order",
+        "packages/policy-engine/src/decide.test.ts \u2014 a guard test fails if an enforced rule lacks a pass row or a fail row",
+        "services/authority/src/app.test.ts \u2014 GET /rules reports exactly vendor.lcbFloor and proof.tierRequired as not enforced"
       ]
     },
     {
@@ -38,8 +38,8 @@
       "targetLevel": "LIVE_TESTNET",
       "actualLevel": "INTEGRATION_TESTED",
       "evidence": [
-        "services/authority/src/app.test.ts — campaign cases C2, C4, C5, C6, C7, C8 over the real HTTP routes",
-        "evidence/campaign/ — the campaign runner records the real outcome of each case",
+        "services/authority/src/app.test.ts \u2014 campaign cases C2, C4, C5, C6, C7, C8 over the real HTTP routes",
+        "evidence/campaign/ \u2014 the campaign runner records the real outcome of each case",
         "A BLOCK never reaches the execute path: propose() marks the record REFUSED and execute() returns DECISION_NOT_ALLOWED"
       ],
       "whyNotHigher": "Zero movement is currently proven by the absence of an execution path, not by a testnet run showing no transaction appeared. LIVE_TESTNET needs a run against a funded wallet where the explorer is shown to be empty for the refused case."
@@ -50,7 +50,7 @@
       "targetLevel": "LIVE_TESTNET",
       "actualLevel": "NOT_YET_PROVEN",
       "evidence": [],
-      "whyNotHigher": "No Dynamic environment and no x402 facilitator have been configured in this build, so no payment has been attempted. The campaign records this case as NOT_ATTEMPTED rather than simulating it (§0.4). This is the single most important claim still unproven, and it is R3 / gate G4."
+      "whyNotHigher": "No Dynamic environment and no x402 facilitator have been configured in this build, so no payment has been attempted. The campaign records this case as NOT_ATTEMPTED rather than simulating it (\u00a70.4). This is the single most important claim still unproven, and it is R3 / gate G4."
     },
     {
       "id": "digest-mutation-refused",
@@ -58,9 +58,9 @@
       "targetLevel": "INTEGRATION_TESTED",
       "actualLevel": "INTEGRATION_TESTED",
       "evidence": [
-        "packages/approval/src/index.test.ts — 18 tests covering mutation of amount, recipient, wallet, TTL and item",
-        "packages/policy-engine/src/properties.test.ts — fast-check, 500 runs: distinct amounts never collide",
-        "evidence/campaign/ — case C3 mints an approval, mutates the amount, and records the refusal"
+        "packages/approval/src/index.test.ts \u2014 18 tests covering mutation of amount, recipient, wallet, TTL and item",
+        "packages/policy-engine/src/properties.test.ts \u2014 fast-check, 500 runs: distinct amounts never collide",
+        "evidence/campaign/ \u2014 case C3 mints an approval, mutates the amount, and records the refusal"
       ]
     },
     {
@@ -69,9 +69,10 @@
       "targetLevel": "INTEGRATION_TESTED",
       "actualLevel": "INTEGRATION_TESTED",
       "evidence": [
-        "services/authority/src/app.test.ts — the revocation webhook deletes the credentials and the next execute returns 403 DELEGATION_REVOKED",
-        "evidence/campaign/ — case C9 measures the elapsed time from webhook to refusal",
-        "services/authority/src/dynamic/credentials.ts — revoke() is a delete, not a status flag, so there is no flag to ignore"
+        "services/authority/src/app.test.ts \u2014 the revocation webhook deletes the credentials and the next execute returns 403 DELEGATION_REVOKED",
+        "evidence/campaign/ \u2014 case C9 measures the elapsed time from webhook to refusal",
+        "services/authority/src/dynamic/credentials.ts \u2014 revoke() is a delete, not a status flag, so there is no flag to ignore",
+        "2026-09-18: revoke/grant cycles exercised repeatedly against the live Dynamic environment; each revoke deleted the stored credentials and each grant re-delivered them through the webhook."
       ],
       "whyNotHigher": "The revocation is driven by a webhook POST in the test rather than by a real user clicking revoke in the Dynamic SDK. The end-to-end version needs a live Dynamic environment."
     },
@@ -89,21 +90,22 @@
       "targetLevel": "UNIT_TESTED",
       "actualLevel": "UNIT_TESTED",
       "evidence": [
-        "packages/payments-x402/src/authorization.ts — the payment leg builds an EIP-3009 TransferWithAuthorization, which authorises one transfer of one value to one recipient in one time window with one nonce",
+        "packages/payments-x402/src/authorization.ts \u2014 the payment leg builds an EIP-3009 TransferWithAuthorization, which authorises one transfer of one value to one recipient in one time window with one nonce",
         "grep for 'approve' across packages/ and services/ returns no ERC-20 approval call",
-        "This is a property of the rail rather than a rule Ambit has to remember — there is no allowance to set and none to drain"
+        "This is a property of the rail rather than a rule Ambit has to remember \u2014 there is no allowance to set and none to drain"
       ]
     },
     {
       "id": "sdk-surface-verified",
       "claim": "Every Dynamic SDK call site is a real method on the pinned package version",
-      "targetLevel": "UNIT_TESTED",
-      "actualLevel": "UNIT_TESTED",
+      "targetLevel": "INTEGRATION_TESTED",
+      "actualLevel": "INTEGRATION_TESTED",
       "evidence": [
-        ".agents/skills/dynamic/SURFACE.md — signatures read from the published .d.ts of @dynamic-labs-wallet/node-evm@1.1.12 and @dynamic-labs-sdk/client@1.33.4, with dist shasums recorded",
-        "The workspace typechecks against the real packages, so an invented method name would fail the build"
-      ],
-      "whyNotHigher": "Type-level verification proves the methods exist and are called correctly. It does not prove they succeed against a live Dynamic environment — that is what the delegation spike is for."
+        ".agents/skills/dynamic/SURFACE.md \u2014 signatures read from the published .d.ts of @dynamic-labs-wallet/node-evm@1.1.12 and @dynamic-labs-sdk/client@1.33.4, with dist shasums recorded",
+        "The workspace typechecks against the real packages, so an invented method name would fail the build",
+        "A live delegation completed end to end on 2026-09-18: Dynamic delivered wallet.delegation.created over HTTPS, the HMAC verified, both JWE secrets decrypted with the registered key pair, and the credentials were stored re-encrypted (delegationsHeld: 1).",
+        "2026-09-18: delegatedSignMessage returned a 65-byte ECDSA signature that recovers to the user's wallet address 0x14f4b95b\u2026ecf51, verified independently with viem. See evidence/delegation/00-probe-2026-09-18.md"
+      ]
     },
     {
       "id": "x402-challenge-parsing",
@@ -111,8 +113,8 @@
       "targetLevel": "UNIT_TESTED",
       "actualLevel": "UNIT_TESTED",
       "evidence": [
-        "packages/payments-x402/src/challenge.test.ts — 27 tests over body-first parsing, header fallback, and refusals",
-        ".agents/skills/dynamic/X402-SURFACE.md — records that x402@1.2.0 sends the challenge in the body, correcting PRD §12.2 per §0.11"
+        "packages/payments-x402/src/challenge.test.ts \u2014 27 tests over body-first parsing, header fallback, and refusals",
+        ".agents/skills/dynamic/X402-SURFACE.md \u2014 records that x402@1.2.0 sends the challenge in the body, correcting PRD \u00a712.2 per \u00a70.11"
       ],
       "whyNotHigher": "Parsed against synthesised challenges of the documented shape. A live provider's challenge has not been read."
     }

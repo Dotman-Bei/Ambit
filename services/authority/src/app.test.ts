@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it, beforeEach } from "vitest";
 import { AmbitStore } from "@ambit/policy-store";
 import { ProofEngine } from "@ambit/proof-engine";
@@ -406,5 +407,78 @@ describe("§12.3 rail discipline", () => {
 describe("USDC address discipline", () => {
   it("the fixture address is the real Base USDC contract, used as the EIP-712 verifying contract", () => {
     expect(USDC_BASE).toBe("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913");
+  });
+});
+
+describe("§18 webhook signature — Dynamic sends an HMAC, not a shared secret", () => {
+  const hmac = (body: string, secret: string) =>
+    createHmac("sha256", secret).update(body, "utf8").digest("hex");
+
+  it("accepts a correct x-dynamic-signature-256 HMAC over the raw body", async () => {
+    const body = JSON.stringify({ eventName: "ping" });
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-dynamic-signature-256": hmac(body, "whsec-test") },
+      body,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("accepts the sha256= prefixed form", async () => {
+    const body = JSON.stringify({ eventName: "ping" });
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-dynamic-signature-256": `sha256=${hmac(body, "whsec-test")}` },
+      body,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects a signature computed with the wrong secret", async () => {
+    const body = JSON.stringify({ eventName: "ping" });
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-dynamic-signature-256": hmac(body, "not-the-secret") },
+      body,
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a tampered body carrying a signature for the original", async () => {
+    // The whole point of signing the raw bytes: an attacker who replays a valid signature with a
+    // different payload must be refused.
+    const original = JSON.stringify({ eventName: "ping" });
+    const tampered = JSON.stringify({ eventName: "wallet.delegation.revoked", data: { userId: "user-1" } });
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-dynamic-signature-256": hmac(original, "whsec-test") },
+      body: tampered,
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("a real signature never downgrades to the weaker shared-secret path", async () => {
+    // Signature header present but wrong: the plain secret header must not rescue it.
+    const body = JSON.stringify({ eventName: "ping" });
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-dynamic-signature-256": "deadbeef",
+        "x-webhook-secret": "whsec-test",
+      },
+      body,
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a body that is not JSON even when correctly signed", async () => {
+    const body = "not json at all";
+    const res = await h.app.request("/webhooks/dynamic", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-dynamic-signature-256": hmac(body, "whsec-test") },
+      body,
+    });
+    expect(res.status).toBe(400);
   });
 });

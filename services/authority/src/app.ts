@@ -11,7 +11,7 @@ import {
   UMBRELLA_REASON_CLASS,
   type Receipt,
 } from "@ambit/shared";
-import { CredentialStore, verifyWebhookSecret } from "./dynamic/credentials.js";
+import { CredentialStore, lastMatchedKeyForm, verifyWebhookSignature } from "./dynamic/credentials.js";
 import { isDynamicConfigured, executionEnabled } from "./dynamic/delegated-client.js";
 import { applyWebhook, parseWebhook } from "./dynamic/webhook.js";
 import { registrySummary } from "./registry.js";
@@ -239,17 +239,167 @@ export function createApp(deps: AppDeps) {
     });
   });
 
+  /**
+   * The delegation liveness probe — `engineering/00-dynamic-delegation-spike` LOCK condition 4.
+   *
+   * Signs a fixed, harmless message with the user's delegated share and returns the signature. It
+   * proves the credentials are **usable**, not merely decryptable, and it does so **without needing
+   * a funded wallet** — which matters because an unfunded wallet and a broken delegation look
+   * identical if the only test you have is a payment.
+   *
+   * It moves no money and touches no policy: `delegatedSignMessage` signs a string, it does not
+   * authorise a transfer. The message names itself and carries the instant, so a signature captured
+   * here can never be replayed as anything meaningful.
+   */
+  app.post("/delegation/probe", async (c) => {
+    const { userId } = principal(c);
+
+    if (!isDynamicConfigured(deps.env)) {
+      throw new AmbitError("CONFIG_INCOMPLETE", "Dynamic is not configured", 503);
+    }
+
+    const credentials = deps.credentials.open(userId, deps.env["CREDENTIAL_ENCRYPTION_KEY"]);
+    const now = (deps.now ?? (() => new Date()))().toISOString();
+    const message = `ambit-delegation-probe ${now}`;
+
+    const { createClient, readDynamicConfig, signProbeMessage } = await import("./dynamic/delegated-client.js");
+
+    let signature: string;
+    try {
+      signature = await signProbeMessage(createClient(readDynamicConfig(deps.env)), credentials, message);
+    } catch (sdkError) {
+      /**
+       * The SDK surfaces a failed call with the response body still an unread `ReadableStream`, so
+       * its message is only ever "Forbidden" — the status text, not Dynamic's explanation. This
+       * repeats the request directly with the same two credentials and reads the body, which is the
+       * only way to learn *why* the call was refused.
+       *
+       * It is a diagnostic, not a fallback: it cannot succeed where the SDK failed, and its result
+       * is logged rather than returned. The original error is always what propagates.
+       */
+      const cfg = readDynamicConfig(deps.env);
+      const url = `https://app.dynamicauth.com/api/v0/environments/${cfg.environmentId}/waas/${credentials.walletId}/delegatedAccess/signMessage`;
+      try {
+        const raw = await fetch(url, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${cfg.apiKey}`,
+            "x-dyn-wallet-api-key": credentials.walletApiKey,
+          },
+          body: JSON.stringify({ message, isFormatted: false }),
+          signal: AbortSignal.timeout(20_000),
+        });
+        const body = (await raw.text()).slice(0, 600);
+        console.warn(`[dynamic probe] direct call -> ${raw.status} ${raw.statusText} body=${body}`);
+      } catch (probeError) {
+        console.warn(
+          `[dynamic probe] direct call failed: ${probeError instanceof Error ? probeError.message : String(probeError)}`,
+        );
+      }
+      throw sdkError;
+    }
+
+    return c.json({
+      ok: true,
+      message,
+      // The signature is evidence and is safe to show. The key share that produced it is not, and
+      // is never included in any response (§18).
+      signature,
+      walletAddress: credentials.walletAddress,
+      signedAt: now,
+    });
+  });
+
   /* ---------------------------------------------------------------- webhook */
 
   app.post("/webhooks/dynamic", async (c) => {
-    // §18 The secret is verified **before the body is parsed**. Reading the body first would mean
-    // an unauthenticated caller could drive the JSON parser and the zod schemas.
-    const presented = c.req.header("x-dynamic-signature") ?? c.req.header("x-webhook-secret") ?? null;
-    if (!verifyWebhookSecret(presented, deps.env["DYNAMIC_WEBHOOK_SECRET"])) {
-      return c.json({ error: "UNAUTHORIZED", detail: "webhook secret did not verify" }, 401);
+    // §18 Verified **before the body is parsed**. The raw text is needed anyway, because Dynamic's
+    // HMAC is computed over the exact bytes it sent — re-serialising parsed JSON would change them.
+    const rawBody = await c.req.text();
+    const verified = verifyWebhookSignature({
+      rawBody,
+      signatureHeader:
+        c.req.header("x-dynamic-signature-256") ?? c.req.header("x-dynamic-signature") ?? null,
+      secretHeader: c.req.header("x-webhook-secret") ?? null,
+      secret: deps.env["DYNAMIC_WEBHOOK_SECRET"],
+    });
+    if (!verified) {
+      /**
+       * Diagnostic for a rejected delivery.
+       *
+       * Logs the header NAMES and the body's event name — never a header value, because the
+       * signature and any shared secret are exactly what must not reach a log (§18). Without this,
+       * a 401 from a real Dynamic delivery is indistinguishable from a wrong secret, a wrong
+       * header name, or a body that was re-serialised somewhere in the proxy chain.
+       */
+      const headerNames = [...new Headers(c.req.raw.headers).keys()].sort();
+      let eventName = "unparseable";
+      try {
+        eventName = String((JSON.parse(rawBody) as { eventName?: string }).eventName ?? "none");
+      } catch {
+        /* body is not JSON; the header list is still the useful part */
+      }
+      console.warn(
+        `[webhook] rejected delivery: event=${eventName} bytes=${rawBody.length} headers=${headerNames.join(",")}`,
+      );
+      return c.json({ error: "UNAUTHORIZED", detail: "webhook signature did not verify" }, 401);
     }
 
-    const parsed = parseWebhook(await c.req.json(), deps.env["DELEGATION_PRIVATE_KEY"]);
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return c.json({ error: "INVALID_REQUEST", detail: "webhook body is not JSON" }, 400);
+    }
+
+    // Records which secret derivation verified, so the convention can be pinned once observed.
+    console.log(`[webhook] accepted delivery, hmac key form: ${lastMatchedKeyForm ?? "shared-secret"}`);
+
+    let parsed;
+    try {
+      parsed = parseWebhook(body, deps.env["DELEGATION_PRIVATE_KEY"]);
+    } catch (error) {
+      /**
+       * A verified delivery that will not parse. Logs the reason and the envelope's *shape* —
+       * top-level keys, and the keys of `data` — never a value, because `data` carries the encrypted
+       * credentials. Without this a 400 here is silent, and an accepted-but-unparseable delivery is
+       * the hardest state to diagnose: the signature was right, so everything upstream looks fine.
+       */
+      const shape = (() => {
+        try {
+          const b = body as Record<string, unknown>;
+          const data = (b?.["data"] ?? {}) as Record<string, unknown>;
+          const dataKeys = Object.keys(data)
+            .map((k) => `${k}:${Array.isArray(data[k]) ? "array" : typeof data[k]}`)
+            .join(",");
+          return `top=[${Object.keys(b ?? {}).join(",")}] data=[${dataKeys}]`;
+        } catch {
+          return "unreadable";
+        }
+      })();
+
+      // Everything an error might carry. The previous version printed only `String(error)`, which
+      // for a zod failure renders as an empty-looking array and says nothing about what was wrong.
+      const e = error as {
+        name?: string;
+        message?: string;
+        code?: unknown;
+        detail?: unknown;
+        issues?: unknown;
+        stack?: string;
+      };
+      const parts = [
+        `name=${e?.name ?? typeof error}`,
+        `message=${JSON.stringify(e?.message ?? String(error))}`,
+        e?.code !== undefined ? `code=${String(e.code)}` : "",
+        e?.detail !== undefined ? `detail=${JSON.stringify(e.detail)}` : "",
+        e?.issues !== undefined ? `issues=${JSON.stringify(e.issues)}` : "",
+      ].filter(Boolean);
+      console.warn(`[webhook] verified but unparseable: ${parts.join(" ")} | ${shape}`);
+      if (e?.stack) console.warn(e.stack.split("\n").slice(0, 4).join(" | "));
+      throw error;
+    }
     const result = applyWebhook(
       parsed,
       deps.credentials,

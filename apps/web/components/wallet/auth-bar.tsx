@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { get, owner, type Delegation, type Health } from "../console/api";
+import { useWallet } from "./use-wallet";
 
 /**
  * The auth bar: wallet address, network, delegation status chip.
@@ -11,6 +12,7 @@ import { get, owner, type Delegation, type Health } from "../console/api";
  * server knows whether the credentials arrived, decrypted, and are still held.
  */
 export function AuthBar() {
+  const w = useWallet();
   const [delegation, setDelegation] = useState<Delegation | null>(null);
   const [network, setNetwork] = useState<string | null>(null);
   const [reachable, setReachable] = useState<boolean | null>(null);
@@ -44,9 +46,9 @@ export function AuthBar() {
   return (
     <div className="auth-bar">
       <span className="label" style={{ color: "var(--dim)", textTransform: "uppercase", letterSpacing: ".04em" }}>
-        Owner
+        {w.address ? "Wallet" : "Owner"}
       </span>
-      <span className="bytes">{owner()}</span>
+      <span className="bytes">{w.address ?? owner()}</span>
       <span className="bytes dim">USDC · Base</span>
       <span style={{ marginLeft: "auto", display: "flex", gap: ".5rem", alignItems: "center" }}>
         {network ? <span className="bytes dim">{network}</span> : null}

@@ -34,11 +34,38 @@ export function setOwner(value: string): void {
   }
 }
 
+/**
+ * The Dynamic user id of the signed-in user.
+ *
+ * This must match the `userId` the delegation webhook carried, because that is the key the
+ * authority service stores credentials under. A hardcoded placeholder here meant the credentials
+ * were stored correctly and then looked up under a different name — `delegationsHeld: 1` on the
+ * server while the console read `granted: false`, which looks exactly like a webhook failure and is
+ * not one.
+ *
+ * Written by the auth bar once Dynamic reports a user; read on every request.
+ */
+export function userId(): string {
+  try {
+    return localStorage.getItem("ambit.userId") ?? "anonymous";
+  } catch {
+    return "anonymous";
+  }
+}
+
+export function setUserId(value: string): void {
+  try {
+    localStorage.setItem("ambit.userId", value);
+  } catch {
+    /* private mode; the session still works, the id just is not remembered */
+  }
+}
+
 export function headers(): Record<string, string> {
   return {
     "content-type": "application/json",
     "x-ambit-owner": owner(),
-    "x-ambit-user": "demo-user",
+    "x-ambit-user": userId(),
   };
 }
 

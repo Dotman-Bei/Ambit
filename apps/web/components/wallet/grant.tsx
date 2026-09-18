@@ -1,44 +1,56 @@
 "use client";
 
-import { dynamicConfiguredInBrowser } from "./providers";
+import { useState } from "react";
+import { useDelegateWaasKeyShares } from "@dynamic-labs-sdk/react-hooks";
 
 /**
- * Grant delegation.
+ * Grant delegation — `delegateWaasKeyShares({ walletAccount })`, via the hook so it runs on the
+ * same client instance that holds the wallet providers.
  *
- * The real call is `delegateWaasKeyShares({ walletAccount })` from `@dynamic-labs-sdk/client/waas`
- * — verified signature in `.agents/skills/dynamic/SURFACE.md`. It resolves `void`: the credentials
- * do not come back to the browser, they arrive at Ambit's webhook. There is no client-side shortcut.
- *
- * Without a configured Dynamic environment this renders as a **labelled blocked capability** rather
- * than a button that would always fail. PRD §9: a blocked capability is visible and labelled, never
- * hidden behind a substitute — and a button that throws on click is a substitute.
+ * It resolves `void`. The key shares never come back here: Dynamic encrypts them with our
+ * registered public key and POSTs them to the webhook. Resolving means **the user approved**, not
+ * **Ambit can sign** — the page re-reads the authority service to learn the second thing.
  */
-export function GrantButton() {
-  if (!dynamicConfiguredInBrowser()) {
+export function GrantButton({ wallet, onGranted }: { wallet: unknown | null; onGranted: () => void }) {
+  const delegate = useDelegateWaasKeyShares();
+  const [error, setError] = useState<string | null>(null);
+
+  if (wallet === null) {
     return (
       <div>
-        <button disabled title="Not configured in this build">Grant authority</button>
-        <p className="note" style={{ marginTop: ".5rem", maxWidth: "46ch" }}>
-          <strong>Not available in this build.</strong> Granting calls{" "}
-          <code>delegateWaasKeyShares(&#123; walletAccount &#125;)</code>, which needs a Dynamic
-          environment id. None is configured, so this is shown disabled rather than as a button that
-          would fail on click. See <code>docs/kill-criteria.md</code> §1.
-        </p>
+        <button disabled title="Sign in first">Grant authority</button>
+        <p className="note" style={{ marginTop: ".4rem" }}>Sign in to create a wallet first.</p>
       </div>
     );
   }
 
   return (
-    <button
-      onClick={async () => {
-        // Wired once an environment exists:
-        //   const [walletAccount] = getWalletAccounts();
-        //   await delegateWaasKeyShares({ walletAccount });
-        // The credentials then reach the server via wallet.delegation.created.
-        throw new Error("delegateWaasKeyShares is wired in providers.tsx once an env id exists");
-      }}
-    >
-      Grant authority
-    </button>
+    <div>
+      <button
+        disabled={delegate.isPending}
+        onClick={async () => {
+          setError(null);
+          try {
+            await delegate.mutateAsync({ walletAccount: wallet } as never);
+            onGranted();
+          } catch (cause) {
+            const e = cause as { name?: string; message?: string };
+            setError(`${e?.name ?? "Error"}: ${e?.message ?? String(cause)}`);
+            console.error("ambit grant failure", cause);
+          }
+        }}
+      >
+        {delegate.isPending ? "Waiting for approval…" : "Grant authority"}
+      </button>
+      <p className="note" style={{ marginTop: ".4rem", maxWidth: "40ch" }}>
+        You approve a signing share. Ambit never holds your wallet, and you can revoke at any time.
+      </p>
+      {error ? (
+        <div className="well" style={{ marginTop: ".6rem" }}>
+          <span className="tag never">grant failed</span>
+          <p className="note" style={{ marginTop: ".4rem" }}>{error}</p>
+        </div>
+      ) : null}
+    </div>
   );
 }

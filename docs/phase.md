@@ -23,8 +23,8 @@ and return `RULE_NOT_ENFORCED` rather than being stubbed silently or omitted.
 
 | | Gate | Status |
 |---|---|---|
-| G1 | A user signs in and a Dynamic embedded wallet exists in their name | **NOT MET** — needs a Dynamic environment |
-| G2 | The user grants delegation; credentials arrive via webhook and decrypt | **NOT MET** — handler built and tested; no real envelope decrypted |
+| G1 | A user signs in and a Dynamic embedded wallet exists in their name | **MET** — 2026-09-18, sandbox env `4204f335`, embedded wallet created on sign-in |
+| G2 | The user grants delegation; credentials arrive via webhook and decrypt | **MET** — 2026-09-18T14:32:54Z. Real delivery, HMAC verified, JWE decrypted, stored re-encrypted |
 | G3 | All 15 rules implemented, ordered, unit tested; 8 and 14 labelled | **MET** |
 | G4 | An in-policy request produces a real payment with a retained tx hash | **NOT MET** — this is R3, and it is the largest gap |
 | G5 | An out-of-policy request produces a named refusal and zero movement | **MET** at integration level |
@@ -36,6 +36,8 @@ and return `RULE_NOT_ENFORCED` rather than being stubbed silently or omitted.
 | G11 | Clean-room reproduction from a fresh clone with an empty `.env` | **MET** — the service starts and refuses to move money |
 | G12 | No secret anywhere in the repo or demo materials | **MET** — enforced by a pre-commit hook that was tested against a planted secret |
 
-**8 of 12 met.** The four that are not all depend on one external thing: a Dynamic environment with
-delegated access enabled. That is §28 kill-criterion 1 and it is an `OWNER DECISION` — see
-`docs/kill-criteria.md`.
+**10 of 12 met.** G1 and G2 closed on 2026-09-18 against a live Dynamic sandbox.
+
+The two outstanding are G4 (a real payment with a retained tx hash — R3) and the end-to-end half of
+G7. Both now depend on funding rather than access: an x402 facilitator and Base Sepolia USDC in the
+delegated wallet.

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AmbitError } from "@ambit/shared";
-import { loadPrivateKey, rsaDecrypt, type CredentialStore, type DelegatedCredentials } from "./credentials.js";
+import type { CredentialStore, DelegatedCredentials } from "./credentials.js";
+import { decryptJwe, isJweObject, type JweObject } from "./jwe.js";
 
 /**
  * §7.3 The Dynamic webhook. Three events, three behaviours:
@@ -17,29 +18,48 @@ import { loadPrivateKey, rsaDecrypt, type CredentialStore, type DelegatedCredent
  * `evidence/claims.json` holds G2 at NOT_YET_PROVEN.
  */
 
-export const WEBHOOK_EVENTS = ["wallet.delegation.created", "wallet.delegation.revoked", "ping"] as const;
+export const WEBHOOK_EVENTS = [
+  "wallet.delegation.created",
+  "wallet.delegation.revoked",
+  "wallet.delegation.signature",
+  "ping",
+] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
-/** Tolerant on the outside, strict on what it produces. */
+/**
+ * Tolerant on the outside, strict on what it produces.
+ *
+ * Every optional field is `.nullish()`, not `.optional()`. The difference is not pedantry: zod's
+ * `.optional()` permits a *missing* key but rejects an explicit `null`, and Dynamic sends
+ * `"userId": null` at the top level — the real user id lives in `data.userId`. With `.optional()`
+ * the whole envelope was rejected before the parser ever reached `data`, producing a 400 on a
+ * delivery whose every meaningful field was present and correct.
+ *
+ * A webhook envelope comes from someone else's serialiser. Treating an explicit null as equivalent
+ * to an absent key is the only reading that survives contact with one.
+ */
 const EnvelopeSchema = z.object({
-  eventName: z.string().optional(),
-  eventType: z.string().optional(),
-  type: z.string().optional(),
-  event: z.string().optional(),
-  data: z.record(z.string(), z.unknown()).optional(),
-  payload: z.record(z.string(), z.unknown()).optional(),
-  userId: z.string().optional(),
-  environmentId: z.string().optional(),
+  eventName: z.string().nullish(),
+  eventType: z.string().nullish(),
+  type: z.string().nullish(),
+  event: z.string().nullish(),
+  data: z.record(z.string(), z.unknown()).nullish(),
+  payload: z.record(z.string(), z.unknown()).nullish(),
+  userId: z.string().nullish(),
+  environmentId: z.string().nullish(),
 });
 
 export type ParsedWebhook =
   | { event: "ping" }
+  | { event: "wallet.delegation.signature"; userId: string | null }
   | { event: "wallet.delegation.created"; userId: string; credentials: DelegatedCredentials }
   | { event: "wallet.delegation.revoked"; userId: string };
 
 function readEventName(envelope: z.infer<typeof EnvelopeSchema>): string {
+  // `??` stops at the first non-nullish value, so a null event name falls through to the next
+  // candidate rather than being accepted as the answer.
   const name = envelope.eventName ?? envelope.eventType ?? envelope.type ?? envelope.event;
-  if (name === undefined) {
+  if (name === undefined || name === null) {
     throw new AmbitError("CHALLENGE_UNPARSEABLE", "the webhook envelope names no event", 400);
   }
   return name;
@@ -62,7 +82,7 @@ function pick(source: Record<string, unknown>, keys: string[]): string | undefin
 export function parseWebhook(rawBody: unknown, privateKeyPem: string | undefined): ParsedWebhook {
   const envelope = EnvelopeSchema.parse(rawBody);
   const eventName = readEventName(envelope);
-  const data = envelope.data ?? envelope.payload ?? {};
+  const data: Record<string, unknown> = envelope.data ?? envelope.payload ?? {};
 
   if (eventName === "ping") {
     // §7.3: 200, no side effects. Named explicitly so nobody later adds a "useful" side effect to
@@ -70,8 +90,24 @@ export function parseWebhook(rawBody: unknown, privateKeyPem: string | undefined
     return { event: "ping" };
   }
 
+  // `data.userId` first: the top-level one is null on Dynamic's delegation events.
   const userId =
     pick(data, ["userId", "user_id", "dynamicUserId"]) ?? envelope.userId ?? undefined;
+
+  /**
+   * `wallet.delegation.signature` — fired when a signing request is routed through the delegation.
+   *
+   * Dynamic registers this event on the webhook automatically, so it arrives whether or not we asked
+   * for it. Ambit does not act on it: signing happens server-side through `delegatedSignTypedData`
+   * on the execution path, where the approval digest has already been verified. Acting on a
+   * signature *notification* would mean signing something the policy engine never judged.
+   *
+   * It is acknowledged rather than refused. Returning 400 to an event Dynamic legitimately sends
+   * would accumulate delivery failures and could get the webhook disabled at their end.
+   */
+  if (eventName === "wallet.delegation.signature") {
+    return { event: "wallet.delegation.signature", userId: userId ?? null };
+  }
 
   if (eventName === "wallet.delegation.revoked") {
     if (userId === undefined) {
@@ -90,40 +126,56 @@ export function parseWebhook(rawBody: unknown, privateKeyPem: string | undefined
       throw new AmbitError("CHALLENGE_UNPARSEABLE", "a delegation webhook names no user", 400);
     }
 
-    const walletId = pick(data, ["walletId", "wallet_id", "id"]);
-    const walletAddress = pick(data, ["walletAddress", "wallet_address", "address", "accountAddress"]);
-    const encryptedApiKey = pick(data, ["walletApiKey", "wallet_api_key", "encryptedWalletApiKey", "apiKey"]);
-    const encryptedKeyShare = pick(data, ["keyShare", "key_share", "encryptedKeyShare", "serverKeyShare"]);
+    /**
+     * The real `wallet.delegation.created` envelope, per Dynamic's published schema:
+     *
+     * ```json
+     * { "data": { "chain", "encryptedDelegatedShare": {alg,ct,ek,iv,tag},
+     *             "encryptedWalletApiKey": {alg,ct,ek,iv,kid,tag},
+     *             "publicKey", "userId", "walletId" },
+     *   "environmentId", "eventName", "userId", ... }
+     * ```
+     *
+     * Three corrections to an earlier guess at this shape, each of which alone would have broken
+     * the flow:
+     *  - the fields are `encryptedDelegatedShare` / `encryptedWalletApiKey`, not `keyShare` /
+     *    `walletApiKey`
+     *  - both are JWE objects, not RSA-encrypted strings — see `jwe.ts`
+     *  - there is no `walletAddress`; the wallet is identified by `publicKey` and `walletId`
+     */
+    const walletId = pick(data, ["walletId", "wallet_id"]);
+    const publicKey = pick(data, ["publicKey", "public_key", "walletAddress", "address"]);
     const shareSetId = pick(data, ["shareSetId", "share_set_id"]);
+    const encryptedShare = data["encryptedDelegatedShare"] ?? data["keyShare"];
+    const encryptedApiKey = data["encryptedWalletApiKey"] ?? data["walletApiKey"];
 
     const missing = [
       walletId === undefined ? "walletId" : null,
-      walletAddress === undefined ? "walletAddress" : null,
-      encryptedApiKey === undefined ? "walletApiKey" : null,
-      encryptedKeyShare === undefined ? "keyShare" : null,
+      publicKey === undefined ? "publicKey" : null,
+      isJweObject(encryptedShare) ? null : "encryptedDelegatedShare",
+      isJweObject(encryptedApiKey) ? null : "encryptedWalletApiKey",
     ].filter((v): v is string => v !== null);
 
     if (missing.length > 0) {
       throw new AmbitError(
         "CHALLENGE_UNPARSEABLE",
-        `the delegation envelope is missing ${missing.join(", ")}. Storing a partial credential would ` +
-          `fail later at signing time with a misleading error, so this refuses now. ` +
-          `Envelope keys seen: ${Object.keys(data).join(", ") || "none"}`,
+        `the delegation envelope is missing or malformed: ${missing.join(", ")}. ` +
+          `Storing a partial credential would fail later at signing time with a misleading error, ` +
+          `so this refuses now. Envelope keys seen: ${Object.keys(data).join(", ") || "none"}`,
         400,
       );
     }
 
-    const privateKey = loadPrivateKey(privateKeyPem);
-    const walletApiKey = rsaDecrypt(privateKey, encryptedApiKey!);
-    const keyShareJson = rsaDecrypt(privateKey, encryptedKeyShare!);
+    const walletApiKey = decryptJwe(encryptedApiKey as JweObject, privateKeyPem);
+    const shareJson = decryptJwe(encryptedShare as JweObject, privateKeyPem);
 
-    // The key share is opaque to Ambit. It is parsed only enough to hand back to the SDK in the
-    // shape the SDK declared, and is never inspected, logged or reshaped.
+    // The key share is opaque to Ambit: parsed only enough to hand back to the SDK in the shape the
+    // SDK declared, never inspected, never logged, never reshaped.
     let keyShare: unknown;
     try {
-      keyShare = JSON.parse(keyShareJson);
+      keyShare = JSON.parse(shareJson);
     } catch {
-      keyShare = keyShareJson;
+      keyShare = shareJson;
     }
 
     return {
@@ -133,7 +185,10 @@ export function parseWebhook(rawBody: unknown, privateKeyPem: string | undefined
         walletId: walletId!,
         walletApiKey,
         keyShare: keyShare as never,
-        walletAddress: walletAddress!,
+        // `publicKey` is what the envelope carries. For EVM the on-chain address is derived from it,
+        // but the delegated signing calls key on `walletId`, so the raw value is stored as-is and
+        // the console displays whatever the authority service reports.
+        walletAddress: publicKey!,
         ...(shareSetId ? { shareSetId } : {}),
       },
     };
@@ -154,6 +209,15 @@ export function applyWebhook(
   switch (parsed.event) {
     case "ping":
       return { event: "ping", applied: false, detail: "ping acknowledged, no side effects" };
+
+    case "wallet.delegation.signature":
+      return {
+        event: "wallet.delegation.signature",
+        applied: false,
+        detail:
+          "signature event acknowledged, no side effects. Ambit signs on its own execution path, " +
+          "after the approval digest is verified — it does not act on a signature notification.",
+      };
 
     case "wallet.delegation.created":
       store.store(parsed.userId, parsed.credentials, encryptionSecret, now);

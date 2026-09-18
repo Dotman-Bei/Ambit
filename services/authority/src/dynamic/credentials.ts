@@ -2,6 +2,8 @@ import {
   constants,
   createCipheriv,
   createDecipheriv,
+  createHash,
+  createHmac,
   createPrivateKey,
   privateDecrypt,
   randomBytes,
@@ -227,18 +229,112 @@ export class CredentialStore {
  * -------------------------------------------------------------------------- */
 
 /**
- * Verifies the webhook secret **before the body is parsed**, per §18.
+ * Verifies a Dynamic webhook **before the body is parsed**, per §18.
  *
- * Constant-time comparison: a plain `===` on a secret leaks its prefix through timing, and this
- * endpoint is reachable by anyone who can find the URL.
+ * Dynamic signs deliveries with an **`x-dynamic-signature-256` header**: an HMAC-SHA256 of the raw
+ * request body, keyed by the webhook secret from the developer console. It does *not* send the
+ * secret itself. An earlier version of this function compared a plain secret header and would have
+ * rejected every genuine Dynamic delivery with 401 — a failure that looks like a misconfigured
+ * secret rather than a wrong scheme, which is why it is called out here.
+ *
+ * Two accepted paths, and the difference matters:
+ *
+ *  - **`x-dynamic-signature-256`** — the real path. The HMAC is computed over the exact bytes
+ *    received, so the raw body must be read as text and verified *before* it is parsed as JSON.
+ *    Parsing first would let an unauthenticated caller drive the JSON parser and the zod schemas.
+ *  - **`x-webhook-secret`** — a direct shared-secret compare, used by the local campaign runner and
+ *    the integration tests, which have no way to be signed by Dynamic. It is accepted only when no
+ *    signature header is present, so a real delivery can never downgrade to the weaker check.
  */
+/**
+ * Dynamic's signing secret is issued in the form `dyn_<keyId>:<secret>`, and the documentation does
+ * not say which part keys the HMAC. Rather than guess — a guess here fails as a bare 401, which is
+ * indistinguishable from a wrong secret or a wrong scheme — every plausible derivation is tried:
+ *
+ *   1. the whole string, as issued
+ *   2. the portion after the colon
+ *   3. that portion base64-decoded, for issuers that print raw key bytes
+ *
+ * All three derive from the same secret, so an attacker without it gains nothing; what this buys is
+ * that the integration works whichever convention Dynamic chose. `lastMatchedKeyForm` records which
+ * one verified, so the winner can be pinned once observed.
+ */
+function candidateKeys(secret: string): Array<{ form: string; key: Buffer }> {
+  const forms: Array<{ form: string; key: Buffer }> = [{ form: "whole", key: Buffer.from(secret, "utf8") }];
+  const colon = secret.indexOf(":");
+  if (colon >= 0 && colon < secret.length - 1) {
+    const tail = secret.slice(colon + 1);
+    forms.push({ form: "after-colon", key: Buffer.from(tail, "utf8") });
+    try {
+      const decoded = Buffer.from(tail.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+      if (decoded.length > 0) forms.push({ form: "after-colon-base64", key: decoded });
+    } catch {
+      /* not base64; the other forms stand */
+    }
+  }
+  return forms;
+}
+
+/** Which key derivation last verified a delivery. Diagnostic only; never a secret. */
+export let lastMatchedKeyForm: string | null = null;
+
+export function verifyWebhookSignature(input: {
+  rawBody: string;
+  signatureHeader: string | null;
+  secretHeader: string | null;
+  secret: string | undefined;
+}): boolean {
+  const { rawBody, signatureHeader, secretHeader, secret } = input;
+  if (!secret || secret.trim() === "") return false;
+
+  if (signatureHeader !== null && signatureHeader.trim() !== "") {
+    // Dynamic may prefix the digest (e.g. "sha256=..."); accept either form.
+    const presented = (
+      signatureHeader.includes("=") && !signatureHeader.trim().endsWith("=")
+        ? signatureHeader.slice(signatureHeader.indexOf("=") + 1)
+        : signatureHeader
+    ).trim();
+
+    for (const { form, key } of candidateKeys(secret)) {
+      // A Hmac is single-use, so the digest is computed once and re-encoded. Hex and base64 are
+      // both common encodings for the header value.
+      const digest = createHmac("sha256", key).update(rawBody, "utf8").digest();
+      const asHex = digest.toString("hex");
+      const asB64 = digest.toString("base64");
+      if (constantTimeEquals(presented.toLowerCase(), asHex) || constantTimeEquals(presented, asB64)) {
+        lastMatchedKeyForm = form;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  if (secretHeader !== null) {
+    return constantTimeEquals(secretHeader, secret);
+  }
+
+  return false;
+}
+
+/**
+ * Constant-time comparison. A plain `===` on a secret leaks its prefix through timing, and this
+ * endpoint is reachable by anyone who can find the URL.
+ *
+ * `timingSafeEqual` throws on a length mismatch, which would itself be a timing signal, so both
+ * sides are hashed to a fixed width first and the digests are compared.
+ */
+function constantTimeEquals(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a, "utf8").digest();
+  const hb = createHash("sha256").update(b, "utf8").digest();
+  return timingSafeEqual(ha, hb);
+}
+
+/** @deprecated Use `verifyWebhookSignature`. Kept so existing callers fail loudly rather than silently. */
 export function verifyWebhookSecret(presented: string | null, expected: string | undefined): boolean {
-  if (!expected || expected.trim() === "") return false;
-  if (presented === null) return false;
-  const a = Buffer.from(presented);
-  const b = Buffer.from(expected);
-  // timingSafeEqual throws on a length mismatch, which would itself be a timing signal; comparing
-  // fixed-length digests of the two values keeps the comparison constant-time regardless.
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return verifyWebhookSignature({
+    rawBody: "",
+    signatureHeader: null,
+    secretHeader: presented,
+    secret: expected,
+  });
 }
