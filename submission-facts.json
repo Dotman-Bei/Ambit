@@ -4,10 +4,10 @@
     "name": "Ambit",
     "oneLiner": "Ambit decides whether an agent may spend, before the money moves, using a deterministic policy engine and a Dynamic wallet the user still owns and can revoke at any moment.",
     "tagline": "The model can propose anything. It cannot widen the ambit.",
-    "repo": null,
-    "liveUrl": null,
+    "repo": "https://github.com/Dotman-Bei/Ambit",
+    "liveUrl": "https://ambit-demo.duckdns.org",
     "demoVideoUrl": null,
-    "_urlsNote": "Null because this build has not been published or recorded. \u00a726 requires all submission links to be publicly viewable; a placeholder URL would be worse than an honest null."
+    "_urlsNote": "demoVideoUrl is null because no demo has been recorded. \u00a725 makes a publicly viewable recording mandatory for online entries, so this is the outstanding blocker, not an omission. The repo must also be pushed \u2014 commits exist locally only."
   },
   "track": {
     "sponsor": "Dynamic",

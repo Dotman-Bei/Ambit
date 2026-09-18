@@ -184,7 +184,7 @@ export default function LedgerPage() {
           <dt>Durable</dt>
           <dd>
             Storage is in-memory in this phase. Restarting the service empties it — the ledger shows
-            this process&rsquo;s life, not an account history. See <Mono>LIMITATIONS.md</Mono> §12.
+            this session, not an account history.
           </dd>
           <dt>Double-entry</dt>
           <dd>

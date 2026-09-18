@@ -109,3 +109,66 @@ kluu@fireblocks.com with an Env ID.
 **Storage is in-memory.** D-010.
 
 8 of 12 phase 1 gates met. The four outstanding share one dependency.
+
+---
+
+## 2026-09-18 — the integration session
+
+Everything in the first entry was built without a Dynamic environment. This day was spent getting
+one and finding out what the documentation does not say.
+
+### Delegated access, proven end to end
+
+Sign-in, grant, webhook delivery, JWE decryption, storage, and a signature that recovers to the
+user's wallet. `engineering/00-dynamic-delegation-spike` went to full LOCK.
+
+**Five faults, none of them logic errors.** All were mismatches between Dynamic's documentation and
+its shipped behaviour, and all are written into that spike's verdict:
+
+1. `promptStepUpAuth` is documented but not published; the headless SDK cannot complete a sign-in
+   against an environment on `minApiVersion 2026_04_01`.
+2. `@dynamic-labs/sdk-react-core@5.x` and `@dynamic-labs-sdk/client@1.33` are separate SDK
+   generations sharing no client state. The matching React bindings are
+   `@dynamic-labs-sdk/react-hooks`. Two packages that both say "Dynamic" are not the same SDK.
+3. Wallet providers are opt-in: `createDynamicClient` registers none.
+4. The webhook payload is JWE, not RSA. Plain `privateDecrypt` could never have worked.
+5. `"userId": null` at the top level, where a zod `.optional()` rejects an explicit null.
+
+**The diagnostic lesson, which cost more than any single fault:** the wallet SDK surfaces a failed
+call with the response body still an unread `ReadableStream`, so its error message is only ever the
+HTTP status text. Four cycles went into "Forbidden" before reading the body directly, which said
+`Insufficient scope permissions` — an API token problem. Read the body first.
+
+### A real payment
+
+`0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718`, Base Sepolia, block 46988167,
+50000 atomic USDC. G4 and R3 met; all twelve phase-1 gates green.
+
+**The agent proposed 0.07 and 0.05 left.** The engine re-judged the provider's live quote rather than
+trusting the agent's estimate — §12.2 step 3 doing exactly what it was specified to do, and the most
+persuasive single fact in the build.
+
+One bug on the way: the seller built its settle URL with `new URL("/settle", base)`, where a leading
+slash makes the path absolute from the origin and silently drops the path prefix. It POSTed to the
+marketing site, got HTML, and the parse failure surfaced as `PROVIDER_REJECTED_PAYMENT` — a client
+bug wearing the costume of a provider failure.
+
+### Deployment and the frontend
+
+Published behind nginx with a Let's Encrypt certificate, which also gave Dynamic the public HTTPS
+webhook the delegation needs. Built ledger, vendors and reports at the owner's direction —
+`pagestructure.md` lists them as phase 2 and not built, so the spec and the build now disagree and
+that is recorded rather than quietly reconciled.
+
+**A frontend audit found the product contradicting itself.** The landing page still said "No payment
+has been executed in this build" while a transaction hash sat in `evidence/payments/`. Three surfaces
+each carried their own prose about it, so they went stale together. `components/evidence.ts` now
+holds the settlement as data and every surface reads it — the fix was the reason there were three
+copies, not the three strings.
+
+### Still outstanding
+
+- **No demo recorded.** §25 makes it mandatory for online entries. This is the blocker.
+- **Not submitted**, and Dynamic not selected in the form (R4).
+- **Commits are local only** — nothing pushed.
+- Route-layer auth is still a header, not a signature (D-009).

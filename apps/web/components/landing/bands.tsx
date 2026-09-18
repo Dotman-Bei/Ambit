@@ -52,11 +52,6 @@ export function HeroBand() {
             Ambit decides whether an agent may spend, before the money moves, using a deterministic
             policy engine and a Dynamic wallet the user still owns and can revoke at any moment.
           </p>
-          <p className="note" style={{ marginTop: "1rem" }}>
-            From Latin <em>ambitus</em>, &ldquo;a going around&rdquo;: in law, the bounded scope within
-            which an authority operates. A statute&rsquo;s ambit is exactly what it may reach and
-            nothing further.
-          </p>
           <div style={{ display: "flex", gap: ".75rem", marginTop: "2rem", flexWrap: "wrap" }}>
             <a className="button" href="/console" style={{ textDecoration: "none" }}>Set a spend ambit</a>
             <a className="button ghost" href="/explorer" style={{ textDecoration: "none" }}>See a live receipt</a>
@@ -384,10 +379,10 @@ export function NotBuiltBand() {
           aside="read first"
           rows={[
             { label: "Custody", figure: "Custodial during an active delegation", detail: "Ambit holds a signing share. It is not trustless. Server compromise is total for every active delegation." },
-            { label: "Payment", figure: "One payment, one rail, testnet", detail: "A real settlement on Base Sepolia proves the mechanism. It does not prove it works under load, against a second provider, or on mainnet. Claims read LIVE_TESTNET." },
+            { label: "Payment", figure: "One payment, one rail, testnet", detail: "A real settlement on Base Sepolia proves the mechanism. It does not prove it works under load, against a second provider, or with real money." },
             { label: "Refusals", figure: "The set is not complete", detail: "The campaign proves the engine refuses the cases in the table. It does not prove the table is exhaustive." },
-            { label: "Rules 8, 14", figure: "Present, not enforced", detail: "Vendor scoring and delivery-tier enforcement return RULE_NOT_ENFORCED and are labelled everywhere. They are not silently passing." },
-            { label: "Reach", figure: "One provider, one rail", detail: "USDC on Base. Multi-rail is not built and is not claimed." },
+            { label: "Two rules", figure: "Present, not enforced", detail: "Vendor scoring and delivery checks are built into the engine but decide nothing yet. They are marked as such everywhere they appear, rather than quietly passing." },
+            { label: "Reach", figure: "One provider, one rail", detail: "USDC on Base Sepolia. Paying on another network or in another asset is not built and is not claimed." },
             { label: "Policy", figure: "Correctness is the user's", detail: "Ambit enforces the policy it is given. A badly written policy is faithfully enforced." },
           ]}
         />

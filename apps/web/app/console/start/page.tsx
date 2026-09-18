@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { SectionTitle, Mono } from "../../../components/console/ui";
+import { SectionTitle } from "../../../components/console/ui";
 import { get, type Delegation, type DecisionRow, type PolicyShape } from "../../../components/console/api";
 
 /**
@@ -137,10 +137,9 @@ export default function GetStarted() {
       </ol>
 
       <p className="note" style={{ marginTop: "2rem", maxWidth: "58ch" }}>
-        Every step reads its state from the service rather than from a local checklist, so a step
-        showing <em>not yet</em> is a fact about this wallet, not a guess. Steps 1 and 2 need a
-        delegation; restarting the service clears the in-memory credential store, so they can return
-        to <em>not yet</em> after a restart — see <Mono>LIMITATIONS.md</Mono> §12.
+        Every step reads its state from the service rather than a local checklist, so a step showing{" "}
+        <em>not yet</em> is a fact about this wallet, not a guess. Restarting the service clears the
+        stored delegation, so steps 1 and 2 can return to <em>not yet</em>.
       </p>
     </>
   );

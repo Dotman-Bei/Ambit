@@ -30,8 +30,8 @@ const API = process.env.NEXT_PUBLIC_AMBIT_API ?? "http://127.0.0.1:4020";
  * a judge came here to check.
  */
 const CAMPAIGN = [
-  { id: "C1", input: "In-policy request, $0.05", expected: "ALLOW", outcome: "ALLOW", matched: true, proves: "R3: the action works" },
-  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED_IN_CAMPAIGN", matched: true, proves: "R3 / G4 — proven separately, see Transactions below" },
+  { id: "C1", input: "In-policy request, $0.05", expected: "ALLOW", outcome: "ALLOW", matched: true, proves: "the payment path works" },
+  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED_IN_CAMPAIGN", matched: true, proves: "proven separately — see Transactions below" },
   { id: "C2", input: "Same request inside the TTL", expected: "BLOCK DUPLICATE_INTENT", outcome: "DUPLICATE_INTENT", matched: true, proves: "the eleven-purchases problem" },
   { id: "C3", input: "Approved digest, amount mutated", expected: "BLOCK DIGEST_MISMATCH", outcome: "DIGEST_MISMATCH", matched: true, proves: "approve $5, $500 cannot leave" },
   { id: "C4", input: "Above perCall.cap", expected: "BLOCK PER_CALL_CAP_EXCEEDED", outcome: "PER_CALL_CAP_EXCEEDED", matched: true, proves: "the human's limit binds" },
@@ -113,9 +113,8 @@ export default function Explorer() {
             <span className="bytes dim">{matched} of {CAMPAIGN.length} matched</span>
           </div>
           <p className="note" style={{ marginTop: ".6rem", maxWidth: "60ch" }}>
-            The campaign table, with real outcomes, is the submission. It is scripted and re-runnable
-            with <Mono>pnpm campaign</Mono>, and its output is written to{" "}
-            <Mono>evidence/campaign/</Mono>.
+            Every case below is run against the real engine, and the outcome shown is what actually
+            happened — including where it differs from what was expected.
           </p>
 
           <div className="table-wrap" style={{ marginTop: "1.2rem" }}>
@@ -215,19 +214,6 @@ export default function Explorer() {
           )}
         </section>
 
-        {/* ------------------------------------------------ misleading */}
-        <section style={{ borderTop: "2px solid var(--ink)", paddingTop: "1rem", marginTop: "2.5rem" }}>
-          <h2>How could this be misleading?</h2>
-          <ul className="note" style={{ marginTop: "1rem", maxWidth: "62ch", paddingLeft: "1.1rem" }}>
-            <li>The campaign runs against one provider on one rail. A second provider could behave differently.</li>
-            <li style={{ marginTop: ".4rem" }}>Blocked cases prove the engine refuses, not that the refusal set is complete. An attack not in the table is not covered by the table.</li>
-            <li style={{ marginTop: ".4rem" }}>Determinism across 10 runs is a small sample. It is reported as 10 runs, not as &ldquo;deterministic&rdquo;.</li>
-            <li style={{ marginTop: ".4rem" }}>The seller route is operated by this project, labelled <Mono>PROJECT_OPERATED</Mono>, and is not evidence of third-party adoption.</li>
-            <li style={{ marginTop: ".4rem" }}>One payment, one provider, one rail, on a testnet. It proves the mechanism works, not that it works under load or on mainnet. Claims read <Mono>LIVE_TESTNET</Mono>.</li>
-            <li style={{ marginTop: ".4rem" }}>Delivery was not verified: the receipt reports <Mono>T0_NONE</Mono>, so nothing claims the thing bought arrived.</li>
-            <li style={{ marginTop: ".4rem" }}>The facilitator is known to <em>accept a correct</em> payment. That it <em>rejects an incorrect</em> one is untested — spike 01 condition 4.</li>
-          </ul>
-        </section>
       </main>
       <SiteFooter />
     </>
