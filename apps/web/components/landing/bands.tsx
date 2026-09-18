@@ -53,9 +53,9 @@ export function HeroBand() {
             <span style={{ color: "var(--boundary-ink)" }}>before the money moves.</span>
           </h1>
           <p className="lead" style={{ marginTop: "1.5rem" }}>
-            Fifteen deterministic rules, in a fixed order, and the first one to refuse goes on the
-            receipt. The wallet stays the user&rsquo;s: a Dynamic delegated wallet they can revoke at
-            any moment.
+            You keep the wallet. Your agent gets a bounded right to spend from it, checked on every
+            request and revocable the moment you change your mind. Every decision is recorded with
+            the rule that produced it.
           </p>
           <div style={{ display: "flex", gap: ".75rem", marginTop: "2rem", flexWrap: "wrap" }}>
             <a className="button" href="/console" style={{ textDecoration: "none" }}>Set a spend ambit</a>
