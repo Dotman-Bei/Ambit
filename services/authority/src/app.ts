@@ -209,6 +209,49 @@ export function createApp(deps: AppDeps) {
     });
   });
 
+  /**
+   * §10.2 The ledger. **Reserved authority and settled spend are reported separately and never
+   * summed**, because they are different facts: a decision reserves budget, it does not move money,
+   * and no surface may report a reservation as spend.
+   *
+   * The two totals come from separate accessors on the store for exactly that reason — there is no
+   * query that could accidentally add them together and call the result "spent".
+   */
+  app.get("/ledger", (c) => {
+    const { owner } = principal(c);
+    const now = (deps.now ?? (() => new Date()))().toISOString();
+
+    const decisions = deps.store.listDecisionsForOwner(owner, 200);
+    const entries = decisions.map((record) => {
+      const reservation = record.decision.proposal
+        ? deps.store.getReservation(record.decision.proposal.reservationId)
+        : undefined;
+      return {
+        id: record.id,
+        createdAt: record.createdAt,
+        capability: record.intent.capability,
+        amount: record.intent.amount,
+        asset: record.intent.asset,
+        recipient: record.intent.recipient,
+        verdict: record.decision.verdict,
+        reasonCode: record.decision.reasonCode,
+        execution: record.execution,
+        /** HELD, SETTLED, RELEASED — or null where the decision reserved nothing (a BLOCK). */
+        reservationState: reservation?.state ?? null,
+        amountAtomic: record.decision.proposal?.budgetDeltaAtomic ?? null,
+        expiresAt: record.decision.proposal?.expiresAt ?? null,
+      };
+    });
+
+    return c.json({
+      asOf: now,
+      // Kept apart deliberately. See the note above.
+      settledTodayAtomic: deps.store.settledToday(owner, now).toString(),
+      reservedTodayAtomic: deps.store.reservedToday(owner, now).toString(),
+      entries,
+    });
+  });
+
   /* ---------------------------------------------------------------- receipts */
 
   /** §13.3 The public receipt. No account needed, and built from the field allowlist. */

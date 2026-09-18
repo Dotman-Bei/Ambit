@@ -45,6 +45,14 @@
   --graticule: 48px;
   --cell:      1rem;
 
+  /*
+   * The console auth bar's height. The rail sticks directly beneath it, so this value is shared
+   * rather than repeated: a hardcoded offset on the rail drifts the moment the bar's padding
+   * changes, leaving either a gap that shows scrolling content or an overlap that hides a nav item.
+   * `min-height` on the bar guarantees the two agree.
+   */
+  --authbar-h: 2.75rem;
+
   --shadow: 0 1px 1px rgb(15 26 34 / .06), 0 12px 32px -18px rgb(15 26 34 / .28);
   --seat:   0 1px 0 rgb(0 0 0 / .08);
   --halo:   0 0 0 3px var(--boundary-soft);
@@ -322,7 +330,7 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
   display: grid;
   grid-template-columns: 14.5rem minmax(0, 1fr);
   gap: 0;
-  min-height: calc(100vh - 3.4rem);
+  min-height: calc(100vh - var(--authbar-h));
 }
 :root[data-sidebar="collapsed"] .console-shell { grid-template-columns: 3.4rem minmax(0, 1fr); }
 
@@ -331,9 +339,9 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
   background: var(--paper);
   padding: .8rem .6rem;
   position: sticky;
-  top: 3.4rem;
+  top: var(--authbar-h);
   align-self: start;
-  max-height: calc(100vh - 3.4rem);
+  max-height: calc(100vh - var(--authbar-h));
   overflow-y: auto;
 }
 
@@ -411,12 +419,29 @@ label { display: block; font-weight: 700; font-size: .8rem; margin-bottom: .3rem
   .rail-label { display: none; }
 }
 
-/* The auth bar above the console content. */
+/*
+ * The auth bar. Pinned to the top of the viewport: it carries the wallet address and the delegation
+ * state, which are the two facts a reader needs while scrolling a decision stream or a ledger —
+ * "whose wallet is this" and "can Ambit sign right now" should never require scrolling back up.
+ *
+ * Opaque rather than translucent. The page beneath is dense ruled tables, and a blurred bar over
+ * hairlines reads as a rendering fault. It sits above the rail, which sticks directly beneath it.
+ */
 .auth-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  min-height: var(--authbar-h);
+  box-sizing: border-box;
   border-bottom: 1px solid var(--rule);
-  padding: .55rem clamp(1rem, 3vw, 2rem);
+  padding: .5rem clamp(1rem, 3vw, 2rem);
   background: var(--paper);
+}
+
+/* Below 46rem the bar wraps to two lines, so it stops being a fixed-height anchor and scrolls. */
+@media (max-width: 46rem) {
+  .auth-bar { position: static; min-height: 0; }
 }
 
 /* Stat tiles: a ruled row, never a row of lifted cards. The plate lift is for a chart plate. */

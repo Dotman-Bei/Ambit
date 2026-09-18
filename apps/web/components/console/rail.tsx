@@ -25,9 +25,9 @@ const LINKS: RailLink[] = [
   { href: "/console/decisions", label: "Decision stream", icon: "decisions", phase: 1 },
   { href: "/console/escalations", label: "Escalations", icon: "escalations", phase: 1 },
   { href: "/console/settings", label: "Settings", icon: "settings", phase: 1 },
-  { href: "/console/ledger", label: "Ledger", icon: "ledger", phase: 2 },
-  { href: "/console/vendors", label: "Vendors", icon: "vendors", phase: 2 },
-  { href: "/console/reports", label: "Reports", icon: "reports", phase: 2 },
+  { href: "/console/ledger", label: "Ledger", icon: "ledger", phase: 1 },
+  { href: "/console/vendors", label: "Vendors", icon: "vendors", phase: 1 },
+  { href: "/console/reports", label: "Reports", icon: "reports", phase: 1 },
   { href: "/explorer", label: "Public explorer", icon: "explorer", phase: 1 },
 ];
 
