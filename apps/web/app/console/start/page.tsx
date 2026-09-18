@@ -136,10 +136,11 @@ export default function GetStarted() {
         ))}
       </ol>
 
-      <p className="note" style={{ marginTop: "2rem", maxWidth: "56ch" }}>
-        Steps 1 and 2 need a Dynamic environment, which is not configured in this build. They will read{" "}
-        <em>not yet</em> and that is accurate rather than broken — see{" "}
-        <Mono>docs/kill-criteria.md</Mono> §1.
+      <p className="note" style={{ marginTop: "2rem", maxWidth: "58ch" }}>
+        Every step reads its state from the service rather than from a local checklist, so a step
+        showing <em>not yet</em> is a fact about this wallet, not a guess. Steps 1 and 2 need a
+        delegation; restarting the service clears the in-memory credential store, so they can return
+        to <em>not yet</em> after a restart — see <Mono>LIMITATIONS.md</Mono> §12.
       </p>
     </>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SectionTitle, Mono } from "../../../components/console/ui";
 import { get, post, owner, setOwner, API, type Health } from "../../../components/console/api";
+import { NETWORK, NETWORK_LABEL } from "../../../components/console/network";
 
 /**
  * B7 `/console/settings`.
@@ -57,7 +58,7 @@ export default function Settings() {
               <dt>API</dt>
               <dd><Mono>{API}</Mono></dd>
               <dt>Network</dt>
-              <dd><Mono>eip155:8453 · USDC on Base</Mono></dd>
+              <dd><Mono>{NETWORK} · USDC on {NETWORK_LABEL}</Mono></dd>
               {health
                 ? Object.entries(health.capabilities).map(([key, value]) => (
                     <div key={key} style={{ display: "contents" }}>

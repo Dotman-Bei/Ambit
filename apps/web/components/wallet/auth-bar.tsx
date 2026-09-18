@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { get, owner, type Delegation, type Health } from "../console/api";
 import { useWallet } from "./use-wallet";
+import { NETWORK_LABEL } from "../console/network";
 
 /**
  * The auth bar: wallet address, network, delegation status chip.
@@ -49,7 +50,7 @@ export function AuthBar() {
         {w.address ? "Wallet" : "Owner"}
       </span>
       <span className="bytes">{w.address ?? owner()}</span>
-      <span className="bytes dim">USDC · Base</span>
+      <span className="bytes dim">USDC · {NETWORK_LABEL}</span>
       <span style={{ marginLeft: "auto", display: "flex", gap: ".5rem", alignItems: "center" }}>
         {network ? <span className="bytes dim">{network}</span> : null}
         {chip()}

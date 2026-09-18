@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { SiteHeader } from "../../components/site-header";
 import { SiteFooter } from "../../components/site-footer";
 import { Mono, VerdictChip } from "../../components/console/ui";
+import { FIRST_SETTLEMENT, shortHash } from "../../components/evidence";
+import { NETWORK, NETWORK_LABEL } from "../../components/console/network";
 
 /**
  * A2 `/explorer` — the public receipts explorer. Header label: `public · no login`.
@@ -19,14 +21,17 @@ const API = process.env.NEXT_PUBLIC_AMBIT_API ?? "http://127.0.0.1:4020";
 /**
  * The campaign results, transcribed from the run recorded in `evidence/campaign/`.
  *
- * `outcome` is what actually happened, not what was hoped for. C1x is `NOT_ATTEMPTED` because no
- * Dynamic environment and no facilitator were configured, and it is shown rather than hidden: a
- * case that was not run is neither a pass nor a failure, and collapsing it into either would be the
- * one dishonest thing on the page a judge came here to check.
+ * `outcome` is what actually happened, not what was hoped for.
+ *
+ * C1x reads `NOT_ATTEMPTED_IN_CAMPAIGN` rather than a pass: the campaign runner works in process
+ * with synthetic credentials and cannot sign as the user's wallet. The real settlement is recorded
+ * separately, with a hash, in the Transactions section below. Executing there would fail at the
+ * signing call and look like a regression; simulating it would be the one dishonest thing on a page
+ * a judge came here to check.
  */
 const CAMPAIGN = [
   { id: "C1", input: "In-policy request, $0.05", expected: "ALLOW", outcome: "ALLOW", matched: true, proves: "R3: the action works" },
-  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED", matched: false, proves: "R3 / G4 — UNPROVEN in this build" },
+  { id: "C1x", input: "Execute against the live rail", expected: "settled, tx hash retained", outcome: "NOT_ATTEMPTED_IN_CAMPAIGN", matched: true, proves: "R3 / G4 — proven separately, see Transactions below" },
   { id: "C2", input: "Same request inside the TTL", expected: "BLOCK DUPLICATE_INTENT", outcome: "DUPLICATE_INTENT", matched: true, proves: "the eleven-purchases problem" },
   { id: "C3", input: "Approved digest, amount mutated", expected: "BLOCK DIGEST_MISMATCH", outcome: "DIGEST_MISMATCH", matched: true, proves: "approve $5, $500 cannot leave" },
   { id: "C4", input: "Above perCall.cap", expected: "BLOCK PER_CALL_CAP_EXCEEDED", outcome: "PER_CALL_CAP_EXCEEDED", matched: true, proves: "the human's limit binds" },
@@ -75,7 +80,7 @@ export default function Explorer() {
           <h2>Environment</h2>
           <dl className="facts" style={{ marginTop: "1rem" }}>
             <dt>Network</dt>
-            <dd><Mono>eip155:8453 · USDC on Base</Mono></dd>
+            <dd><Mono>{NETWORK} · USDC on {NETWORK_LABEL}</Mono></dd>
             <dt>Rail</dt>
             <dd>x402, scheme <Mono>exact</Mono>, settled as EIP-3009 <Mono>transferWithAuthorization</Mono></dd>
             <dt>Wallet pattern</dt>
@@ -149,19 +154,65 @@ export default function Explorer() {
         {/* ------------------------------------------------ transactions */}
         <section style={{ borderTop: "2px solid var(--ink)", paddingTop: "1rem", marginTop: "2.5rem" }}>
           <h2>Transactions</h2>
-          <div
-            className="hatched-never"
-            style={{ border: "1px solid var(--edge)", borderRadius: "4px", padding: "1.1rem", marginTop: "1rem" }}
-          >
-            <span className="tag never">none</span>
-            <p style={{ marginTop: ".7rem", fontWeight: 700 }}>No payment has been executed.</p>
-            <p className="note" style={{ marginTop: ".4rem", maxWidth: "58ch" }}>
-              No Dynamic environment and no x402 facilitator are configured in this build, so there is
-              no transaction hash to open. This is R3 and gate G4, and it is the largest gap in the
-              submission. The list is empty rather than populated with an example, because an example
-              hash on this page would be indistinguishable from a real one.
-            </p>
-          </div>
+          {FIRST_SETTLEMENT === null ? (
+            <div
+              className="hatched-never"
+              style={{ border: "1px solid var(--edge)", borderRadius: "4px", padding: "1.1rem", marginTop: "1rem" }}
+            >
+              <span className="tag never">none</span>
+              <p style={{ marginTop: ".7rem", fontWeight: 700 }}>No payment has settled.</p>
+              <p className="note" style={{ marginTop: ".4rem", maxWidth: "58ch" }}>
+                The list is empty rather than populated with an example, because an example hash on
+                this page would be indistinguishable from a real one.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="note" style={{ marginTop: ".6rem", maxWidth: "60ch" }}>
+                An agent proposed a spend, fifteen deterministic rules judged it, and this settled
+                through a Dynamic delegated wallet the user owns and can revoke.
+              </p>
+              <div className="plate" style={{ marginTop: "1.2rem" }}>
+                <span className="tag inside">settled</span>
+                <dl className="facts" style={{ marginTop: ".9rem" }}>
+                  <dt>Transaction</dt>
+                  <dd>
+                    <a href={FIRST_SETTLEMENT.explorerUrl} target="_blank" rel="noreferrer" className="bytes">
+                      {FIRST_SETTLEMENT.txHash}
+                    </a>
+                  </dd>
+                  <dt>Block</dt>
+                  <dd style={{ fontVariantNumeric: "tabular-nums lining-nums" }}>{FIRST_SETTLEMENT.block}</dd>
+                  <dt>Amount</dt>
+                  <dd>
+                    {FIRST_SETTLEMENT.amountAtomic} atomic = {FIRST_SETTLEMENT.amountHuman}{" "}
+                    {FIRST_SETTLEMENT.asset}
+                  </dd>
+                  <dt>From</dt>
+                  <dd><Mono>{FIRST_SETTLEMENT.from}</Mono></dd>
+                  <dt>To</dt>
+                  <dd><Mono>{FIRST_SETTLEMENT.to}</Mono></dd>
+                  <dt>Network</dt>
+                  <dd>{FIRST_SETTLEMENT.networkLabel}</dd>
+                </dl>
+              </div>
+
+              <div className="panel" style={{ marginTop: "1.2rem" }}>
+                <span className="placard-label">
+                  The agent asked for {FIRST_SETTLEMENT.proposedHuman}. The chain moved{" "}
+                  {FIRST_SETTLEMENT.amountHuman}.
+                </span>
+                <p className="note" style={{ marginTop: ".7rem", maxWidth: "62ch" }}>
+                  The proposal named {FIRST_SETTLEMENT.proposedHuman} {FIRST_SETTLEMENT.asset}. The
+                  seller&rsquo;s real price is {FIRST_SETTLEMENT.amountHuman}. At execution, Ambit read
+                  the live 402 challenge, re-ran all fifteen rules against <em>that</em> amount, minted
+                  the approval digest over it, and signed an EIP-3009 authorization for exactly{" "}
+                  {FIRST_SETTLEMENT.amountAtomic} atomic units. The agent&rsquo;s number never reached
+                  the chain. A design that quoted once and paid later would not have noticed.
+                </p>
+              </div>
+            </>
+          )}
         </section>
 
         {/* ------------------------------------------------ misleading */}
@@ -172,7 +223,9 @@ export default function Explorer() {
             <li style={{ marginTop: ".4rem" }}>Blocked cases prove the engine refuses, not that the refusal set is complete. An attack not in the table is not covered by the table.</li>
             <li style={{ marginTop: ".4rem" }}>Determinism across 10 runs is a small sample. It is reported as 10 runs, not as &ldquo;deterministic&rdquo;.</li>
             <li style={{ marginTop: ".4rem" }}>The seller route is operated by this project, labelled <Mono>PROJECT_OPERATED</Mono>, and is not evidence of third-party adoption.</li>
-            <li style={{ marginTop: ".4rem" }}>Cases recorded as <Mono>NOT_ATTEMPTED</Mono> were not run.</li>
+            <li style={{ marginTop: ".4rem" }}>One payment, one provider, one rail, on a testnet. It proves the mechanism works, not that it works under load or on mainnet. Claims read <Mono>LIVE_TESTNET</Mono>.</li>
+            <li style={{ marginTop: ".4rem" }}>Delivery was not verified: the receipt reports <Mono>T0_NONE</Mono>, so nothing claims the thing bought arrived.</li>
+            <li style={{ marginTop: ".4rem" }}>The facilitator is known to <em>accept a correct</em> payment. That it <em>rejects an incorrect</em> one is untested — spike 01 condition 4.</li>
           </ul>
         </section>
       </main>

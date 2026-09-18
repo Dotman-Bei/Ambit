@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { HeroChart } from "../HeroChart";
 import { Placard } from "../Placard";
+import { FIRST_SETTLEMENT, shortHash } from "../evidence";
 
 /**
  * The landing bands, in the order `pagestructure.md` §A1 fixes them:
@@ -288,17 +289,46 @@ export function LiveProofBand() {
       <div className="grid-2" style={{ marginTop: "2rem" }}>
         <div className="panel">
           <span className="placard-label">Allowed</span>
-          <div
-            className="hatched-never"
-            style={{ marginTop: ".9rem", padding: "1rem", border: "1px solid var(--edge)", borderRadius: "3px" }}
-          >
-            <span className="tag never">no transaction yet</span>
-            <p className="note" style={{ marginTop: ".6rem" }}>
-              No payment has been executed in this build. No Dynamic environment and no x402
-              facilitator are configured, so there is no hash to show — and an example hash here would
-              be indistinguishable from a real one.
-            </p>
-          </div>
+          {FIRST_SETTLEMENT === null ? (
+            <div
+              className="hatched-never"
+              style={{ marginTop: ".9rem", padding: "1rem", border: "1px solid var(--edge)", borderRadius: "3px" }}
+            >
+              <span className="tag never">no transaction yet</span>
+              <p className="note" style={{ marginTop: ".6rem" }}>
+                No payment has settled, so there is no hash to show — and an example hash here would be
+                indistinguishable from a real one.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginTop: ".9rem" }}>
+                <span className="tag inside">settled</span>
+              </div>
+              <dl className="facts" style={{ marginTop: ".9rem" }}>
+                <dt>Transaction</dt>
+                <dd>
+                  <a href={FIRST_SETTLEMENT.explorerUrl} target="_blank" rel="noreferrer" className="bytes">
+                    {shortHash(FIRST_SETTLEMENT.txHash)}
+                  </a>
+                </dd>
+                <dt>Amount</dt>
+                <dd>
+                  {FIRST_SETTLEMENT.amountHuman} {FIRST_SETTLEMENT.asset} on {FIRST_SETTLEMENT.networkLabel}
+                </dd>
+                <dt>From</dt>
+                <dd className="bytes">{FIRST_SETTLEMENT.from}</dd>
+              </dl>
+              <p className="note" style={{ marginTop: ".9rem" }}>
+                <strong>
+                  The agent asked for {FIRST_SETTLEMENT.proposedHuman}. The chain moved{" "}
+                  {FIRST_SETTLEMENT.amountHuman}.
+                </strong>{" "}
+                The engine re-judges the provider&rsquo;s actual quote, not the agent&rsquo;s estimate,
+                so an agent cannot overpay past the real price.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="panel">
@@ -354,7 +384,7 @@ export function NotBuiltBand() {
           aside="read first"
           rows={[
             { label: "Custody", figure: "Custodial during an active delegation", detail: "Ambit holds a signing share. It is not trustless. Server compromise is total for every active delegation." },
-            { label: "Payment", figure: "No live payment executed", detail: "R3 and gate G4 are unproven in this build. The campaign records that case as NOT_ATTEMPTED rather than simulating it." },
+            { label: "Payment", figure: "One payment, one rail, testnet", detail: "A real settlement on Base Sepolia proves the mechanism. It does not prove it works under load, against a second provider, or on mainnet. Claims read LIVE_TESTNET." },
             { label: "Refusals", figure: "The set is not complete", detail: "The campaign proves the engine refuses the cases in the table. It does not prove the table is exhaustive." },
             { label: "Rules 8, 14", figure: "Present, not enforced", detail: "Vendor scoring and delivery-tier enforcement return RULE_NOT_ENFORCED and are labelled everywhere. They are not silently passing." },
             { label: "Reach", figure: "One provider, one rail", detail: "USDC on Base. Multi-rail is not built and is not claimed." },
