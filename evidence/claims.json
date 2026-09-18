@@ -40,7 +40,8 @@
       "evidence": [
         "services/authority/src/app.test.ts \u2014 campaign cases C2, C4, C5, C6, C7, C8 over the real HTTP routes",
         "evidence/campaign/ \u2014 the campaign runner records the real outcome of each case",
-        "A BLOCK never reaches the execute path: propose() marks the record REFUSED and execute() returns DECISION_NOT_ALLOWED"
+        "A BLOCK never reaches the execute path: propose() marks the record REFUSED and execute() returns DECISION_NOT_ALLOWED",
+        "The same wallet and rail produced exactly one on-chain transfer across the session \u2014 the single allowed payment. Refused proposals left no transaction, verified by eth_getLogs over the USDC contract filtered to this payer."
       ],
       "whyNotHigher": "Zero movement is currently proven by the absence of an execution path, not by a testnet run showing no transaction appeared. LIVE_TESTNET needs a run against a funded wallet where the explorer is shown to be empty for the refused case."
     },
@@ -48,9 +49,12 @@
       "id": "in-policy-payment",
       "claim": "An in-policy request produces a real payment with a retained transaction hash",
       "targetLevel": "LIVE_TESTNET",
-      "actualLevel": "NOT_YET_PROVEN",
-      "evidence": [],
-      "whyNotHigher": "No Dynamic environment and no x402 facilitator have been configured in this build, so no payment has been attempted. The campaign records this case as NOT_ATTEMPTED rather than simulating it (\u00a70.4). This is the single most important claim still unproven, and it is R3 / gate G4."
+      "actualLevel": "LIVE_TESTNET",
+      "evidence": [
+        "Base Sepolia transaction 0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718 (block 46988167): 50000 atomic USDC from the user's Dynamic embedded wallet 0x14f4b95b\u2026ecf51 to the seller's payee, signed via delegatedSignTypedData and settled through https://x402.org/facilitator.",
+        "Payer balance moved 20.000000 -> 19.950000 USDC, read directly from the chain.",
+        "evidence/payments/g4-first-settlement-2026-09-18.md"
+      ]
     },
     {
       "id": "digest-mutation-refused",
@@ -92,7 +96,8 @@
       "evidence": [
         "packages/payments-x402/src/authorization.ts \u2014 the payment leg builds an EIP-3009 TransferWithAuthorization, which authorises one transfer of one value to one recipient in one time window with one nonce",
         "grep for 'approve' across packages/ and services/ returns no ERC-20 approval call",
-        "This is a property of the rail rather than a rule Ambit has to remember \u2014 there is no allowance to set and none to drain"
+        "This is a property of the rail rather than a rule Ambit has to remember \u2014 there is no allowance to set and none to drain",
+        "Confirmed on-chain: 0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718 is a transferWithAuthorization for an exact amount to an exact recipient. No approval transaction exists for this wallet."
       ]
     },
     {

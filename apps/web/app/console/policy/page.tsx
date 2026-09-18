@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SectionTitle, Mono } from "../../../components/console/ui";
 import { get, put, post, owner, type PolicyShape, type RuleCatalogueEntry } from "../../../components/console/api";
+import { ASSET, NETWORK } from "../../../components/console/network";
 
 /**
  * B3 `/console/policy` — the ambit. Kicker "Policy builder", title "Your ambit".
@@ -126,8 +127,8 @@ export default function PolicyPage() {
       categoryAllowList: [],
       categoryDenyList: list(draft.categoryDenyList),
       proofTierByCategory: {},
-      asset: "USDC",
-      network: "eip155:8453",
+      asset: ASSET,
+      network: NETWORK,
       ...(draft.escalateAboveAmount ? { escalateAboveAmount: draft.escalateAboveAmount } : {}),
     };
 

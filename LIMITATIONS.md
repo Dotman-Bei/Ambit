@@ -65,17 +65,21 @@ that the purchase is wise, the vendor honest, or the policy correct.
 The nine above are the product's designed boundaries. The five below are where **this build** stops
 short of the PRD, and they are the ones to read before deploying anything.
 
-## 10. No live payment has been executed — R3 and gate G4 are unproven
+## 10. One payment, on a testnet, through a project-operated seller
 
-No Dynamic environment and no x402 facilitator were configured during this build, so **no payment
-has been attempted and no transaction hash exists.** The campaign records case C1x as
-`NOT_ATTEMPTED`. `evidence/claims.json` holds `in-policy-payment` at `NOT_YET_PROVEN`.
+A real payment has settled: [`0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718`](https://sepolia.basescan.org/tx/0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718) on Base Sepolia. That
+closes R3 and gate G4. What it does **not** establish:
 
-Everything upstream of the signature is built and tested: the challenge parser, the exact-quote
-re-decision, the digest mint and re-verification, the EIP-712 payload construction, and the Dynamic
-call site. What has not happened is the call returning a real signature and a facilitator settling it.
-
-**This is the largest gap in the build and nothing in the repository claims otherwise.**
+- **One payment, one provider, one rail.** It proves the mechanism works, not that it works under
+  load or against a second provider.
+- **The seller is `PROJECT_OPERATED`** — operated by this project, labelled as such in the registry,
+  in `/health`, in the console and on every receipt. A labelled project-operated payment is a real
+  payment. It is **not** evidence of third-party adoption.
+- **Base Sepolia, not mainnet.** Claims read `LIVE_TESTNET` and never `LIVE_MAINNET`.
+- **Delivery was not verified.** The receipt reports `T0_NONE`: no independent verifier is
+  registered, so nothing claims the thing bought arrived.
+- **Spike 01 condition 4 is unproven.** A deliberately underpaid payment has not been tested, so the
+  claim is that the facilitator *accepted a correct payment*, not that it *rejects incorrect ones*.
 
 ## 11. Route-layer authentication is a header, not a signature
 

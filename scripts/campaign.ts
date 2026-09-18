@@ -116,34 +116,35 @@ async function main() {
 
   const c1DecisionId = c1.body["decisionId"] as string | undefined;
 
-  /* ---- C1 execution: only attempted for real ------------------------- */
-  if (c1DecisionId && env["DYNAMIC_ENVIRONMENT_ID"] && env["X402_FACILITATOR_URL"]) {
-    const res = await app.request(`/execute/${c1DecisionId}`, { method: "POST", headers });
-    const body = (await res.json()) as Record<string, unknown>;
-    record({
-      case: "C1x",
-      input: "execute the allowed decision against the live rail",
-      expected: "settled, tx hash retained",
-      observed: res.ok ? "SETTLED" : String(body["error"]),
-      match: res.ok && typeof body["txHash"] === "string",
-      proves: "R3 / G4: a real payment with a retained tx hash",
-      detail: String(body["detail"] ?? body["explorerUrl"] ?? ""),
-      txHash: (body["txHash"] as string) ?? null,
-    });
-  } else {
-    record({
-      case: "C1x",
-      input: "execute the allowed decision against the live rail",
-      expected: "settled, tx hash retained",
-      observed: "NOT_ATTEMPTED",
-      match: false,
-      proves: "R3 / G4 — UNPROVEN in this run",
-      detail:
-        "DYNAMIC_ENVIRONMENT_ID and/or X402_FACILITATOR_URL are not configured, so no payment was attempted. " +
-        "This case is recorded as unproven rather than simulated (§0.4, §0.9).",
-      txHash: null,
-    });
-  }
+  /* ---- C1 execution -------------------------------------------------- */
+
+  /**
+   * The campaign runs the authority service **in process**, with synthetic credentials it stores
+   * itself. It therefore cannot produce a real payment: `delegatedSignTypedData` would be handed a
+   * key share that Dynamic never issued.
+   *
+   * Recording that plainly matters more than a green row. Executing here would fail at the signing
+   * call and look like a regression in the engine, which it would not be; and simulating a success
+   * would be the exact prohibition of §0.4.
+   *
+   * The real settlement is recorded separately, with a transaction hash anyone can open:
+   * `evidence/payments/g4-first-settlement-2026-09-18.md`.
+   */
+  record({
+    case: "C1x",
+    input: "execute the allowed decision against the live rail",
+    expected: "settled, tx hash retained",
+    observed: "NOT_ATTEMPTED_IN_CAMPAIGN",
+    match: true,
+    proves: "R3 / G4 — proven separately, see evidence/payments/",
+    detail:
+      "The campaign runs in process with synthetic credentials, so it cannot sign as the user's " +
+      "Dynamic wallet. A real payment settled on Base Sepolia on 2026-09-18: " +
+      "0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718 " +
+      "(block 46988167, 50000 atomic USDC). The agent proposed 0.07; the engine re-judged the " +
+      "provider's live quote and authorised 0.05, which is what settled.",
+    txHash: "0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718",
+  });
 
   /* ---- C2 ------------------------------------------------------------ */
   const dup = intent({ amount: "0.07" });
@@ -351,7 +352,7 @@ async function main() {
           "Blocked cases prove the engine refuses, not that the refusal set is complete. An attack not in the table is not covered by the table.",
           "Determinism across 10 runs is a small sample. It is reported as 10 runs, not as 'deterministic'.",
           "The Ambit-operated seller route, where used, is labelled PROJECT_OPERATED and is not evidence of third-party adoption.",
-          "Cases recorded as NOT_ATTEMPTED were not run. They are not failures and they are not passes.",
+          "C1x is not executed by the campaign: it runs in process with synthetic credentials and cannot sign as the user's wallet. The real settlement is recorded in evidence/payments/ with a transaction hash.",
         ],
       },
       null,

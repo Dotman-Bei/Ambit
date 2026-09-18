@@ -26,10 +26,10 @@ and return `RULE_NOT_ENFORCED` rather than being stubbed silently or omitted.
 | G1 | A user signs in and a Dynamic embedded wallet exists in their name | **MET** — 2026-09-18, sandbox env `4204f335`, embedded wallet created on sign-in |
 | G2 | The user grants delegation; credentials arrive via webhook and decrypt | **MET** — 2026-09-18T14:32:54Z. Real delivery, HMAC verified, JWE decrypted, stored re-encrypted |
 | G3 | All 15 rules implemented, ordered, unit tested; 8 and 14 labelled | **MET** |
-| G4 | An in-policy request produces a real payment with a retained tx hash | **NOT MET** — this is R3, and it is the largest gap |
-| G5 | An out-of-policy request produces a named refusal and zero movement | **MET** at integration level |
+| G4 | An in-policy request produces a real payment with a retained tx hash | **MET** — `0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718` on Base Sepolia, block 46988167 |
+| G5 | An out-of-policy request produces a named refusal and zero movement | **MET** — one allowed payment produced exactly one on-chain transfer; refusals produced none |
 | G6 | A mutated digest is refused at execution | **MET** |
-| G7 | Revocation stops the agent, visible in under 5 seconds | **MET** at integration level; end-to-end needs G1 |
+| G7 | Revocation stops the agent, visible in under 5 seconds | **MET** — revoke/grant cycled repeatedly against the live environment; the console reflects it without a reload |
 | G8 | Campaign cases C1–C10 run, real outcomes in `evidence/campaign/` | **MET** — 10 of 11 matched, C1x recorded `NOT_ATTEMPTED` |
 | G9 | README names the wallet pattern, the owner, the auth method | **MET** |
 | G10 | README points to the exact Dynamic SDK call sites | **MET** — with file and line ranges |

@@ -5,6 +5,7 @@ import { SectionTitle, VerdictChip, Mono } from "../../../components/console/ui"
 import { RuleList, type RuleRow } from "../../../components/console/rule-list";
 import { Empty } from "../../../components/console/empty";
 import { get, post, type DecisionRow, type Delegation, type RuleCatalogueEntry } from "../../../components/console/api";
+import { ASSET, NETWORK } from "../../../components/console/network";
 
 /**
  * B4 `/console/decisions` — the decision stream. Kicker "Live", title "Decision stream".
@@ -73,8 +74,8 @@ export default function DecisionStream() {
         capability,
         category: "data",
         amount,
-        asset: "USDC",
-        network: "eip155:8453",
+        asset: ASSET,
+        network: NETWORK,
         recipient,
         context: { taskId: `task-${Date.now()}`, requestedBy: "worker-alpha" },
       },

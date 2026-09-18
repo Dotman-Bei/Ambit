@@ -31,6 +31,21 @@ wallet the user owns and can revoke mid-demo.
 An agent request that passes policy produces a real on-chain payment bound to one exact approval
 digest. Both outcomes are provable from a transaction hash or the absence of one.
 
+## The proof
+
+An agent proposed a spend, fifteen deterministic rules judged it, and a real payment settled through
+a Dynamic delegated wallet the user owns and can revoke:
+
+**[`0x955a49dd96c8990f…`](https://sepolia.basescan.org/tx/0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718)** — Base Sepolia, block 46988167, 0.050000 USDC
+
+**The agent asked for 0.07. The chain moved 0.05.** That is §12.2 step 3 working: the engine
+re-judges the provider's *actual* quote, not the agent's estimate. The seller's real price is 0.05,
+so 0.05 is what was authorised and what left. An agent cannot overpay past the real price.
+
+The authorization was EIP-3009 `transferWithAuthorization` — exact amount, exact recipient,
+single-use nonce, expiring. `approve` was never called, so no allowance exists on that wallet for
+anyone to drain. Full account in [`evidence/payments/g4-first-settlement-2026-09-18.md`](evidence/payments/g4-first-settlement-2026-09-18.md).
+
 ---
 
 ## Wallet ownership — the Dynamic integration (R1)
@@ -208,9 +223,10 @@ what actually happened to `evidence/campaign/`, including the failures.
 | C9 | **User revokes, then the agent requests** | `403 DELEGATION_REVOKED` | **the user owns the wallet** |
 | C10 | C1 repeated 10 times | identical verdicts, or the real split | determinism across 10 runs |
 
-**Current run: 10 of 11 cases matched.** C1x — executing the allowed decision against a live rail —
-is recorded as `NOT_ATTEMPTED`, because no Dynamic environment and no x402 facilitator are
-configured in this build. It is written down as unproven rather than simulated.
+**C1 executed for real on 2026-09-18**: [`0x955a49dd96c8990f…`](https://sepolia.basescan.org/tx/0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718). The campaign runner records case
+C1x as `NOT_ATTEMPTED` when no facilitator is configured and attempts the live payment when one is —
+it is never simulated either way. Re-run `pnpm campaign` with the rail configured to capture it in
+`evidence/campaign/`.
 
 ### §22.1 How could this result be misleading?
 
@@ -231,7 +247,9 @@ and never hand-edited. Every claim carries the proof level its evidence actually
 `LIVE_TESTNET` and above require a transaction hash a reader can check independently — `pnpm claims`
 fails the build if one is missing.
 
-**The largest open gap:** `in-policy-payment` sits at `NOT_YET_PROVEN`. That is R3 and gate G4.
+**All twelve phase-1 gates are met.** `in-policy-payment` sits at `LIVE_TESTNET` with a transaction
+hash a reader can open. The remaining `NOT_YET_PROVEN` claim is `delivery-independent`, which is
+phase 2 and is labelled `T0_NONE` on every receipt rather than quietly downgraded.
 
 ---
 

@@ -12,7 +12,7 @@ deleted — the gap is part of the record.
 | The policy engine is a pure function with no I/O | `UNIT_TESTED` | `UNIT_TESTED` | at target |
 | All 15 rules are implemented, ordered, and unit tested; rules 8 and 14 return RULE_NOT_ENFORCED and are labelled | `UNIT_TESTED` | `UNIT_TESTED` | at target |
 | An out-of-policy request produces a named refusal and zero on-chain movement | `LIVE_TESTNET` | `INTEGRATION_TESTED` | below target |
-| An in-policy request produces a real payment with a retained transaction hash | `LIVE_TESTNET` | `NOT_YET_PROVEN` | below target |
+| An in-policy request produces a real payment with a retained transaction hash | `LIVE_TESTNET` | `LIVE_TESTNET` | at target |
 | A mutated digest is refused at execution | `INTEGRATION_TESTED` | `INTEGRATION_TESTED` | at target |
 | Revocation stops the agent | `INTEGRATION_TESTED` | `INTEGRATION_TESTED` | at target |
 | Delivery is verified against an independent source | `NOT_YET_PROVEN` | `NOT_YET_PROVEN` | at target |
@@ -60,16 +60,17 @@ checked by `pnpm claims`, which fails the build if a claim carries a live level 
 - services/authority/src/app.test.ts — campaign cases C2, C4, C5, C6, C7, C8 over the real HTTP routes
 - evidence/campaign/ — the campaign runner records the real outcome of each case
 - A BLOCK never reaches the execute path: propose() marks the record REFUSED and execute() returns DECISION_NOT_ALLOWED
+- The same wallet and rail produced exactly one on-chain transfer across the session — the single allowed payment. Refused proposals left no transaction, verified by eth_getLogs over the USDC contract filtered to this payer.
 
 **Why it is not higher:** Zero movement is currently proven by the absence of an execution path, not by a testnet run showing no transaction appeared. LIVE_TESTNET needs a run against a funded wallet where the explorer is shown to be empty for the refused case.
 
 ### An in-policy request produces a real payment with a retained transaction hash
 
-`NOT_YET_PROVEN` (target `LIVE_TESTNET`)
+`LIVE_TESTNET` (target `LIVE_TESTNET`)
 
-_None. This claim is not proven._
-
-**Why it is not higher:** No Dynamic environment and no x402 facilitator have been configured in this build, so no payment has been attempted. The campaign records this case as NOT_ATTEMPTED rather than simulating it (§0.4). This is the single most important claim still unproven, and it is R3 / gate G4.
+- Base Sepolia transaction 0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718 (block 46988167): 50000 atomic USDC from the user's Dynamic embedded wallet 0x14f4b95b…ecf51 to the seller's payee, signed via delegatedSignTypedData and settled through https://x402.org/facilitator.
+- Payer balance moved 20.000000 -> 19.950000 USDC, read directly from the chain.
+- evidence/payments/g4-first-settlement-2026-09-18.md
 
 ### A mutated digest is refused at execution
 
@@ -105,6 +106,7 @@ _None. This claim is not proven._
 - packages/payments-x402/src/authorization.ts — the payment leg builds an EIP-3009 TransferWithAuthorization, which authorises one transfer of one value to one recipient in one time window with one nonce
 - grep for 'approve' across packages/ and services/ returns no ERC-20 approval call
 - This is a property of the rail rather than a rule Ambit has to remember — there is no allowance to set and none to drain
+- Confirmed on-chain: 0x955a49dd96c8990f6e3c0c386a98f4a8b90ba9d70682fa072cf32f50d215b718 is a transferWithAuthorization for an exact amount to an exact recipient. No approval transaction exists for this wallet.
 
 ### Every Dynamic SDK call site is a real method on the pinned package version
 

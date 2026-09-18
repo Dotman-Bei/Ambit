@@ -7,6 +7,7 @@ import { RevokeButton } from "./revoke";
 import { SignIn } from "./sign-in";
 import { useWallet } from "./use-wallet";
 import { get, post, type Delegation } from "../console/api";
+import { NETWORK, NETWORK_LABEL } from "../console/network";
 
 /**
  * B5 `/console/wallet`.
@@ -87,7 +88,7 @@ export function WalletScreen() {
             )}
           </dd>
           <dt>Network</dt>
-          <dd><Mono>eip155:8453 · USDC on Base</Mono></dd>
+          <dd><Mono>{NETWORK} · USDC on {NETWORK_LABEL}</Mono></dd>
           <dt>Dynamic user</dt>
           <dd>
             {w.userId ? (

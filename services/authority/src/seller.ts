@@ -101,18 +101,37 @@ export function createSellerApp(env: Record<string, string | undefined>) {
       extra: { name: config.domainName, version: config.domainVersion },
     };
 
-    const settle = await fetch(new URL("/settle", config.facilitatorUrl).href, {
+    /**
+     * Joined by trimming and concatenating, not with `new URL("/settle", base)`.
+     *
+     * A leading slash makes the path absolute from the origin, so
+     * `new URL("/settle", "https://x402.org/facilitator")` resolves to `https://x402.org/settle` —
+     * silently dropping the `/facilitator` prefix. That produced a request to the marketing site,
+     * an HTML response, and a JSON parse error reported as PROVIDER_REJECTED_PAYMENT: a bug in the
+     * client wearing the costume of a provider failure.
+     */
+    const settleUrl = `${config.facilitatorUrl.replace(/\/+$/, "")}/settle`;
+    const settle = await fetch(settleUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ x402Version: 1, paymentPayload: decoded, paymentRequirements: requirements }),
       signal: AbortSignal.timeout(30_000),
     });
 
-    const settlement = (await settle.json()) as {
-      success?: boolean;
-      transaction?: string;
-      errorReason?: string;
-    };
+    // Read as text first: a facilitator that returns HTML (a proxy error page, a wrong path) would
+    // otherwise surface as an opaque JSON parse error rather than as what it is.
+    const settleBody = await settle.text();
+    let settlement: { success?: boolean; transaction?: string; errorReason?: string };
+    try {
+      settlement = JSON.parse(settleBody) as typeof settlement;
+    } catch {
+      throw new AmbitError(
+        "PROVIDER_REJECTED_PAYMENT",
+        `the facilitator at ${settleUrl} returned ${settle.status} with non-JSON content ` +
+          `(${settleBody.slice(0, 120)}). This is a facilitator or URL problem, not a refused payment.`,
+        502,
+      );
+    }
 
     if (!settle.ok || settlement.success !== true || !settlement.transaction) {
       // The facilitator refused. This is the correct outcome for an underpaid or misdirected
