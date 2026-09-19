@@ -4,6 +4,7 @@ dist/
 out/
 coverage/
 *.tsbuildinfo
+*.log
 
 # secrets and private material — §0.5, §18
 .env
