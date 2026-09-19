@@ -40,9 +40,12 @@ proposes, before anything is signed, and the rule that refuses goes on the recor
 
 ## Demo
 
-<!-- Replace with the recorded walkthrough before submission. -->
-> **Not yet recorded.** The walkthrough covering sign-in, delegation, an allowed payment and a live
-> refusal will be embedded here.
+[![Ambit demo: the engine re-judges the provider's real price and signs an EIP-3009 authorization](videos/ambit-demo/snapshots/frame-04-at-115s.png)](https://youtu.be/4Xj35MENE_s)
+
+**[Watch the walkthrough](https://youtu.be/4Xj35MENE_s)** (2:44). Wallet ownership and delegation,
+the fifteen rules in evaluation order, a live `DUPLICATE_INTENT` refusal with zero movement, the
+execution-time quote re-judge where the agent asked for 0.07 USDC and 0.05 settled, and the public
+evidence explorer.
 
 ## Explore without a wallet
 
