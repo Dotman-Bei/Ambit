@@ -46,7 +46,7 @@ export function HeroBand() {
 
       <div className="container" style={{ position: "relative", paddingBlock: "var(--band)" }}>
         <div style={{ maxWidth: "34rem" }}>
-          <span className="tag boundary">Signing authority</span>
+          <span className="tag boundary">Agentic payment authority</span>
           <h1 className="display" style={{ marginTop: "1.25rem" }}>
             Every agent payment is judged
             <br />

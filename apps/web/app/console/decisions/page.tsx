@@ -31,6 +31,38 @@ type FullDecision = {
   detail?: string;
 };
 
+/**
+ * What each execute-time refusal means, in words a reader has not had to learn.
+ *
+ * The code is never dropped in favour of the sentence. Naming the exact rule is the product's whole
+ * argument, and a message that said only "something went wrong" would be the one screen in the build
+ * that refuses to say which rule refused. So both are shown: the sentence explains, the code is the
+ * thing you can search for, quote in a bug report, or match against the receipt.
+ *
+ * Codes absent from this map fall through to the service's own detail string, which is written to be
+ * read.
+ */
+const REFUSAL_COPY: Record<string, string> = {
+  DECISION_ALREADY_EXECUTED:
+    "This decision has already settled. A decision executes once, so running it again cannot move money a second time.",
+  DIGEST_MISMATCH:
+    "The request no longer matches what was approved. Something about the amount, payee, item or wallet changed after approval, so the approval does not cover it.",
+  DELEGATION_REVOKED:
+    "The wallet owner revoked Ambit's signing access. Nothing can be signed until delegation is granted again.",
+  EXECUTION_PAUSED:
+    "An operator paused spending. The pause is checked before any rule is read and takes effect without a deploy.",
+  WALLET_PROVIDER_UNAVAILABLE:
+    "Dynamic could not be reached, so nothing was signed. There is no degraded mode: Ambit refuses rather than falling back to another signer.",
+  CONFIG_INCOMPLETE:
+    "This capability is not configured, so it refuses rather than accepting the payment on trust.",
+  PROVIDER_REJECTED_PAYMENT:
+    "The payment facilitator refused the authorization. No money moved.",
+  APPROVAL_EXPIRED:
+    "The approval window closed before this was executed. Expiry authorises nothing.",
+};
+
+type Notice = { tone: "inside" | "caution" | "never"; label: string; text: string; code?: string; href?: string | null };
+
 export default function DecisionStream() {
   const [rows, setRows] = useState<DecisionRow[] | null>(null);
   const [catalogue, setCatalogue] = useState<RuleCatalogueEntry[]>([]);
@@ -39,6 +71,7 @@ export default function DecisionStream() {
   const [latest, setLatest] = useState<FullDecision | null>(null);
   const [unreachable, setUnreachable] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   // Propose form — the agent's request, as the demo drives it.
   const [amount, setAmount] = useState("0.05");
@@ -102,12 +135,48 @@ export default function DecisionStream() {
     void load();
   };
 
+  /**
+   * Execute, and report the outcome in the page rather than in a browser dialog.
+   *
+   * This used to call `window.alert` with the raw code and detail. Three things were wrong with
+   * that. A native dialog is chrome the product does not control, so it cannot carry the design
+   * system or the reason-code vocabulary. It blocks the page until dismissed, which is the opposite
+   * of what an operator watching a decision stream wants. And it fires only on failure, so a
+   * *successful* execution said nothing at all and the operator had to go hunting for the hash.
+   *
+   * A refusal here is the product working. It is shown as a limit in force, not as a crash.
+   */
   const execute = async (id: string) => {
     setBusy(true);
+    setNotice(null);
     const result = await post<{ txHash: string | null; explorerUrl: string | null }>(`/execute/${id}`);
     setBusy(false);
-    if (result.state === "error") {
-      window.alert(`${result.code}\n\n${result.detail}`);
+
+    if (result.state === "ok") {
+      setNotice({
+        tone: "inside",
+        label: "settled",
+        text: result.data.txHash
+          ? "Payment settled. The transaction is on chain and checkable by anyone."
+          : "Execution completed.",
+        ...(result.data.txHash ? { code: result.data.txHash } : {}),
+        ...(result.data.explorerUrl ? { href: result.data.explorerUrl } : {}),
+      });
+    } else if (result.state === "error") {
+      setNotice({
+        tone: "never",
+        label: "refused",
+        code: result.code,
+        text: REFUSAL_COPY[result.code] ?? result.detail ?? "The service refused this execution.",
+      });
+    } else {
+      setNotice({
+        tone: "caution",
+        label: "unknown",
+        text:
+          "The authority service could not be reached, so whether this executed is unknown. " +
+          "Reload the stream before trying again: a second attempt on a settled decision is refused, not duplicated.",
+      });
     }
     void load();
   };
@@ -134,6 +203,22 @@ export default function DecisionStream() {
         title="Decision stream"
         aside={<span className="bytes dim">{rows ? `${rows.length} recorded` : "reading"}</span>}
       />
+
+      {notice ? (
+        <div className="well" style={{ marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", gap: ".6rem", alignItems: "center", flexWrap: "wrap" }}>
+            <span className={`tag ${notice.tone}`}>{notice.label}</span>
+            {notice.code ? (
+              notice.href ? (
+                <a href={notice.href} target="_blank" rel="noreferrer" className="bytes">{notice.code}</a>
+              ) : (
+                <Mono>{notice.code}</Mono>
+              )
+            ) : null}
+          </div>
+          <p className="note" style={{ marginTop: ".5rem", maxWidth: "62ch" }}>{notice.text}</p>
+        </div>
+      ) : null}
 
       {/* ------------------------------------------------ propose */}
       <div className="panel" style={{ marginBottom: "2rem" }}>
