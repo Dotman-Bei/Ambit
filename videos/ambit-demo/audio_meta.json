@@ -1,0 +1,65 @@
+[
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot1_job.wav",
+    "name": "shot1_job",
+    "start": 0.0,
+    "duration": 21.78,
+    "end": 21.78,
+    "words": 55,
+    "text": "Funding an autonomous agent today means handing it a wallet and hoping. But a balance only answers one question: can this transaction clear? It cannot tell you if the vendor is trusted, if you already bought this, or who authorized it. Handing an agent a wallet is giving it a blast radius... not a control."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot2_wallet.wav",
+    "name": "shot2_wallet",
+    "start": 21.78,
+    "duration": 23.3,
+    "end": 45.08,
+    "words": 46,
+    "text": "Ambit changes the ownership model. The user owns the wallet throughout, powered by Dynamic delegated access. Ambit only holds a delegated signing share. The user can revoke access at any moment. When revoked, credentials are deleted instantly, and the agent's next request returns 403 Delegation Revoked."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot3_engine.wav",
+    "name": "shot3_engine",
+    "start": 45.08,
+    "duration": 22.82,
+    "end": 67.9,
+    "words": 46,
+    "text": "Before any money moves, the proposal enters Ambit's policy engine. Fifteen deterministic rules evaluate in a fixed, unalterable order. There is no LLM on the money decision path. A prompt injection cannot widen what the policy permits, and emergency pause takes effect instantly without deploying code."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot4_decisions.wav",
+    "name": "shot4_decisions",
+    "start": 67.9,
+    "duration": 27.08,
+    "end": 94.98,
+    "words": 55,
+    "text": "In the live decision stream, the agent proposes a spend. The engine evaluates every rule. It grants an ALLOW, minting an approval digest and reserving authority\u2014but no money has moved yet. If the agent proposes the same call again, it is immediately blocked: DUPLICATE_INTENT. If it exceeds the cap: PER_CALL_CAP_EXCEEDED. Zero movement, refused by name."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot5_settlement.wav",
+    "name": "shot5_settlement",
+    "start": 94.98,
+    "duration": 34.42,
+    "end": 129.4,
+    "words": 62,
+    "text": "Here is the critical seam. The agent asked for 0.07 USDC. But at execution, Ambit re-reads the provider's live quote: 0.05 USDC. The engine re-judges the real price, binds one exact hash, and signs an EIP-3009 authorization using the user's delegated share. Approve is never called, so no standing allowance exists. 0.05 USDC settles on Base Sepolia with an open transaction hash."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot6_evidence.wav",
+    "name": "shot6_evidence",
+    "start": 129.4,
+    "duration": 19.82,
+    "end": 149.22,
+    "words": 41,
+    "text": "Anyone can verify this without an account on the public evidence explorer. Every adversarial test case is published with its real outcome. Receipts record decision, payment, delivery, and anchor as four separate, honest facts. No fake claims, and no simulated passes."
+  },
+  {
+    "file": "/root/Ambit/videos/ambit-demo/audio/shot7_outro.wav",
+    "name": "shot7_outro",
+    "start": 149.22,
+    "duration": 12.21,
+    "end": 161.43,
+    "words": 25,
+    "text": "Ambit. An authority layer before the money moves. The agent proposes. The policy decides. Nothing moves until it passes. Explore Ambit at ambit dot surf."
+  }
+]

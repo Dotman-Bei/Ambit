@@ -14,3 +14,11 @@ internal/
 *.pem
 *.key
 delegation_private*
+
+# demo video working files. The composition source and the storyboard are kept;
+# the rendered master and the raw audio are not repository content.
+videos/**/renders/
+videos/**/audio/
+videos/**/node_modules/
+*.mp4
+*.wav
